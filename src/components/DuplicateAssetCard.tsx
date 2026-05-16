@@ -1,5 +1,14 @@
 import {useState} from 'react'
-import {Camera, MapPin, Trash2} from 'lucide-react'
+import type {MouseEvent, ReactNode} from 'react'
+import {
+  Camera,
+  Check,
+  Copy,
+  MapPin,
+  ShieldAlert,
+  ShieldCheck,
+  Trash2,
+} from 'lucide-react'
 import type {AssetResponseDto} from '@immich/sdk'
 import {cn} from '../lib/utils'
 
@@ -7,6 +16,9 @@ interface Props {
   id: string
   asset?: AssetResponseDto
   error?: string
+  hasEmbedding?: boolean
+  distance?: number
+  reference?: AssetResponseDto
 }
 
 function formatBytes(bytes: number | null | undefined): string {
@@ -18,11 +30,18 @@ function formatBytes(bytes: number | null | undefined): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`
 }
 
-function formatDate(value: string | null | undefined): string {
+function formatDatePart(value: string | null | undefined): string {
   if (!value) return '—'
   const d = new Date(value)
   if (isNaN(d.getTime())) return value
-  return d.toLocaleString()
+  return d.toLocaleDateString('fr-BE')
+}
+
+function formatTimePart(value: string | null | undefined): string {
+  if (!value) return '—'
+  const d = new Date(value)
+  if (isNaN(d.getTime())) return value
+  return d.toLocaleTimeString('fr-BE')
 }
 
 function formatLocation(
@@ -30,15 +49,129 @@ function formatLocation(
   lon: number | null | undefined,
   city: string | null | undefined,
   country: string | null | undefined,
-): string | null {
+): string {
   const place = [city, country].filter(Boolean).join(', ')
   const coords =
     lat != null && lon != null ? `${lat.toFixed(5)}, ${lon.toFixed(5)}` : null
   if (place && coords) return `${place} (${coords})`
-  return place || coords || null
+  return place || coords || '—'
 }
 
-export function DuplicateAssetCard({id, asset, error}: Props) {
+function formatDimensions(
+  w: number | null | undefined,
+  h: number | null | undefined,
+): string {
+  return w && h ? `${w} × ${h}` : '—'
+}
+
+function formatCamera(
+  make: string | null | undefined,
+  model: string | null | undefined,
+): string {
+  const v = [make, model].filter(Boolean).join(' ')
+  return v || '—'
+}
+
+function highlightCls(differs: boolean): string {
+  return differs
+    ? 'rounded bg-yellow-200/70 px-1 py-0.5 dark:bg-yellow-400/25'
+    : ''
+}
+
+function CopyText({
+  value,
+  className,
+  title,
+}: {
+  value: string
+  className?: string
+  title?: string
+}) {
+  const [copied, setCopied] = useState(false)
+  async function handleCopy(e: MouseEvent<HTMLButtonElement>) {
+    e.preventDefault()
+    try {
+      await navigator.clipboard.writeText(value)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1200)
+    } catch {
+      /* ignore */
+    }
+  }
+  return (
+    <button
+      type="button"
+      onClick={handleCopy}
+      title={title ?? 'Click to copy'}
+      className={cn(
+        'group flex w-full items-start gap-1 text-left transition',
+        className,
+      )}
+    >
+      <span className="min-w-0 flex-1 break-all">{value}</span>
+      {copied ? (
+        <Check size={11} className="mt-0.5 shrink-0 text-emerald-600" />
+      ) : (
+        <Copy
+          size={11}
+          className="mt-0.5 shrink-0 opacity-40 transition group-hover:opacity-100"
+        />
+      )}
+    </button>
+  )
+}
+
+function EmbeddingBadge({present}: {present: boolean}) {
+  return (
+    <span
+      className={cn(
+        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
+        present
+          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
+          : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
+      )}
+    >
+      {present ? <ShieldCheck size={11} /> : <ShieldAlert size={11} />}
+      {present ? 'Embedding' : 'No embedding'}
+    </span>
+  )
+}
+
+function DistanceBadge({distance}: {distance: number}) {
+  return (
+    <span className="inline-flex items-center gap-1 rounded-full bg-black/5 px-2 py-0.5 font-mono text-[10px] text-[var(--sea-ink)] dark:bg-white/10">
+      d = {distance.toFixed(4)}
+    </span>
+  )
+}
+
+interface RowProps {
+  label: ReactNode
+  children: ReactNode
+  differs?: boolean
+}
+
+function Row({label, children, differs}: RowProps) {
+  return (
+    <>
+      <dt className="font-medium">{label}</dt>
+      <dd>
+        <span className={cn('inline-block', highlightCls(!!differs))}>
+          {children}
+        </span>
+      </dd>
+    </>
+  )
+}
+
+export function DuplicateAssetCard({
+  id,
+  asset,
+  error,
+  hasEmbedding,
+  distance,
+  reference,
+}: Props) {
   const [marked, setMarked] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
@@ -47,24 +180,62 @@ export function DuplicateAssetCard({id, asset, error}: Props) {
     return (
       <div className="island-shell flex w-[320px] shrink-0 flex-col rounded-2xl border border-red-300/60 p-4">
         <p className="island-kicker mb-2 text-red-600">Asset unavailable</p>
-        <p className="text-xs break-all text-[var(--sea-ink-soft)]">{id}</p>
+        {hasEmbedding != null || distance != null ? (
+          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+            {hasEmbedding != null ? (
+              <EmbeddingBadge present={hasEmbedding} />
+            ) : null}
+            {distance != null ? <DistanceBadge distance={distance} /> : null}
+          </div>
+        ) : null}
+        <CopyText
+          value={id}
+          title="Click to copy asset ID"
+          className="break-all font-mono text-[10px] text-[var(--sea-ink-soft)]"
+        />
         {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
       </div>
     )
   }
 
   const exif = asset.exifInfo
+  const refExif = reference?.exifInfo
+
+  const taken = exif?.dateTimeOriginal ?? asset.localDateTime
+  const refTaken = reference
+    ? (refExif?.dateTimeOriginal ?? reference.localDateTime)
+    : undefined
+
+  const dimensions = formatDimensions(
+    exif?.exifImageWidth,
+    exif?.exifImageHeight,
+  )
+  const refDimensions = reference
+    ? formatDimensions(refExif?.exifImageWidth, refExif?.exifImageHeight)
+    : undefined
+
+  const camera = formatCamera(exif?.make, exif?.model)
+  const refCamera = reference
+    ? formatCamera(refExif?.make, refExif?.model)
+    : undefined
+
   const location = formatLocation(
     exif?.latitude,
     exif?.longitude,
     exif?.city,
     exif?.country,
   )
-  const camera = [exif?.make, exif?.model].filter(Boolean).join(' ')
-  const dimensions =
-    exif?.exifImageWidth && exif?.exifImageHeight
-      ? `${exif.exifImageWidth} × ${exif.exifImageHeight}`
-      : '—'
+  const refLocation = reference
+    ? formatLocation(
+        refExif?.latitude,
+        refExif?.longitude,
+        refExif?.city,
+        refExif?.country,
+      )
+    : undefined
+
+  const hasRef = !!reference
+  const diff = (a: unknown, b: unknown) => hasRef && a !== b
 
   async function handleMark() {
     if (!asset || submitting || marked) return
@@ -115,50 +286,130 @@ export function DuplicateAssetCard({id, asset, error}: Props) {
         className="mt-3 truncate text-sm font-semibold text-[var(--sea-ink)]"
         title={asset.originalFileName}
       >
-        {asset.originalFileName}
+        <span
+          className={cn(
+            'inline-block max-w-full truncate align-bottom',
+            highlightCls(
+              diff(asset.originalFileName, reference?.originalFileName),
+            ),
+          )}
+        >
+          {asset.originalFileName}
+        </span>
       </h3>
 
+      {hasEmbedding != null || distance != null ? (
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          {hasEmbedding != null ? (
+            <EmbeddingBadge present={hasEmbedding} />
+          ) : null}
+          {distance != null ? <DistanceBadge distance={distance} /> : null}
+        </div>
+      ) : null}
+
+      <div className="mt-2">
+        <p className="island-kicker mb-0.5 text-[9px]">Asset ID</p>
+        <CopyText
+          value={id}
+          title="Click to copy asset ID"
+          className="break-all font-mono text-[10px] text-[var(--sea-ink-soft)]"
+        />
+      </div>
+
       <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs text-[var(--sea-ink-soft)]">
-        <dt className="font-medium">Size</dt>
-        <dd>{formatBytes(exif?.fileSizeInByte)}</dd>
+        <Row
+          label="Size"
+          differs={diff(exif?.fileSizeInByte, refExif?.fileSizeInByte)}
+        >
+          {formatBytes(exif?.fileSizeInByte)}
+        </Row>
 
-        <dt className="font-medium">Dimensions</dt>
-        <dd>{dimensions}</dd>
+        <Row label="Dimensions" differs={diff(dimensions, refDimensions)}>
+          {dimensions}
+        </Row>
 
-        <dt className="font-medium">Taken</dt>
-        <dd>{formatDate(exif?.dateTimeOriginal ?? asset.localDateTime)}</dd>
+        <Row
+          label="Taken date"
+          differs={diff(formatDatePart(taken), formatDatePart(refTaken))}
+        >
+          {formatDatePart(taken)}
+        </Row>
+        <Row
+          label="Taken time"
+          differs={diff(formatTimePart(taken), formatTimePart(refTaken))}
+        >
+          {formatTimePart(taken)}
+        </Row>
 
-        <dt className="font-medium">Uploaded</dt>
-        <dd>{formatDate(asset.fileCreatedAt)}</dd>
+        <Row
+          label="Uploaded date"
+          differs={diff(
+            formatDatePart(asset.fileCreatedAt),
+            formatDatePart(reference?.fileCreatedAt),
+          )}
+        >
+          {formatDatePart(asset.fileCreatedAt)}
+        </Row>
+        <Row
+          label="Uploaded time"
+          differs={diff(
+            formatTimePart(asset.fileCreatedAt),
+            formatTimePart(reference?.fileCreatedAt),
+          )}
+        >
+          {formatTimePart(asset.fileCreatedAt)}
+        </Row>
 
-        <dt className="font-medium">Modified</dt>
-        <dd>{formatDate(asset.fileModifiedAt)}</dd>
+        <Row
+          label="Modified date"
+          differs={diff(
+            formatDatePart(asset.fileModifiedAt),
+            formatDatePart(reference?.fileModifiedAt),
+          )}
+        >
+          {formatDatePart(asset.fileModifiedAt)}
+        </Row>
+        <Row
+          label="Modified time"
+          differs={diff(
+            formatTimePart(asset.fileModifiedAt),
+            formatTimePart(reference?.fileModifiedAt),
+          )}
+        >
+          {formatTimePart(asset.fileModifiedAt)}
+        </Row>
 
-        {camera ? (
-          <>
-            <dt className="flex items-center gap-1 font-medium">
+        <Row
+          label={
+            <span className="flex items-center gap-1">
               <Camera size={12} /> Camera
-            </dt>
-            <dd>{camera}</dd>
-          </>
-        ) : null}
+            </span>
+          }
+          differs={diff(camera, refCamera)}
+        >
+          {camera}
+        </Row>
 
-        {location ? (
-          <>
-            <dt className="flex items-center gap-1 font-medium">
+        <Row
+          label={
+            <span className="flex items-center gap-1">
               <MapPin size={12} /> Location
-            </dt>
-            <dd className="break-words">{location}</dd>
-          </>
-        ) : null}
+            </span>
+          }
+          differs={diff(location, refLocation)}
+        >
+          <span className="break-words">{location}</span>
+        </Row>
       </dl>
 
-      <p
-        className="mt-3 break-all rounded-md bg-black/5 p-2 font-mono text-[10px] text-[var(--sea-ink-soft)]"
-        title={asset.originalPath}
-      >
-        {asset.originalPath}
-      </p>
+      <div className="mt-3">
+        <p className="island-kicker mb-0.5 text-[9px]">Path</p>
+        <CopyText
+          value={asset.originalPath}
+          title="Click to copy path"
+          className="break-all rounded-md bg-black/5 p-2 font-mono text-[10px] text-[var(--sea-ink-soft)]"
+        />
+      </div>
 
       <button
         type="button"

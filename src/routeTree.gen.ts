@@ -12,12 +12,13 @@ import {Route as rootRouteImport} from './routes/__root'
 import {Route as PingRouteImport} from './routes/ping'
 import {Route as DuplicatesRouteImport} from './routes/duplicates'
 import {Route as AssetsRouteImport} from './routes/assets'
-import {Route as AboutRouteImport} from './routes/about'
 import {Route as IndexRouteImport} from './routes/index'
+import {Route as ReviewNikonLowResRouteImport} from './routes/review.nikon-low-res'
 import {Route as ApiNikonLowResRouteImport} from './routes/api.nikon-low-res'
 import {Route as ApiMarkForDeletionRouteImport} from './routes/api.mark-for-deletion'
 import {Route as ApiThumbnailIdRouteImport} from './routes/api.thumbnail.$id'
 import {Route as ApiSimilarIdRouteImport} from './routes/api.similar.$id'
+import {Route as ApiTryIdId2RouteImport} from './routes/api.try.$id.$id2'
 
 const PingRoute = PingRouteImport.update({
   id: '/ping',
@@ -34,14 +35,14 @@ const AssetsRoute = AssetsRouteImport.update({
   path: '/assets',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewNikonLowResRoute = ReviewNikonLowResRouteImport.update({
+  id: '/review/nikon-low-res',
+  path: '/review/nikon-low-res',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiNikonLowResRoute = ApiNikonLowResRouteImport.update({
@@ -64,87 +65,99 @@ const ApiSimilarIdRoute = ApiSimilarIdRouteImport.update({
   path: '/api/similar/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTryIdId2Route = ApiTryIdId2RouteImport.update({
+  id: '/api/try/$id/$id2',
+  path: '/api/try/$id/$id2',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/assets': typeof AssetsRoute
   '/duplicates': typeof DuplicatesRoute
   '/ping': typeof PingRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/api/try/$id/$id2': typeof ApiTryIdId2Route
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/assets': typeof AssetsRoute
   '/duplicates': typeof DuplicatesRoute
   '/ping': typeof PingRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/api/try/$id/$id2': typeof ApiTryIdId2Route
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
-  '/about': typeof AboutRoute
   '/assets': typeof AssetsRoute
   '/duplicates': typeof DuplicatesRoute
   '/ping': typeof PingRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/api/try/$id/$id2': typeof ApiTryIdId2Route
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/about'
     | '/assets'
     | '/duplicates'
     | '/ping'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/api/try/$id/$id2'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/about'
     | '/assets'
     | '/duplicates'
     | '/ping'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/api/try/$id/$id2'
   id:
     | '__root__'
     | '/'
-    | '/about'
     | '/assets'
     | '/duplicates'
     | '/ping'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/api/try/$id/$id2'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
-  AboutRoute: typeof AboutRoute
   AssetsRoute: typeof AssetsRoute
   DuplicatesRoute: typeof DuplicatesRoute
   PingRoute: typeof PingRoute
   ApiMarkForDeletionRoute: typeof ApiMarkForDeletionRoute
   ApiNikonLowResRoute: typeof ApiNikonLowResRoute
+  ReviewNikonLowResRoute: typeof ReviewNikonLowResRoute
   ApiSimilarIdRoute: typeof ApiSimilarIdRoute
   ApiThumbnailIdRoute: typeof ApiThumbnailIdRoute
+  ApiTryIdId2Route: typeof ApiTryIdId2Route
 }
 
 declare module '@tanstack/react-router' {
@@ -170,18 +183,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AssetsRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/': {
       id: '/'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review/nikon-low-res': {
+      id: '/review/nikon-low-res'
+      path: '/review/nikon-low-res'
+      fullPath: '/review/nikon-low-res'
+      preLoaderRoute: typeof ReviewNikonLowResRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/nikon-low-res': {
@@ -212,19 +225,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSimilarIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/try/$id/$id2': {
+      id: '/api/try/$id/$id2'
+      path: '/api/try/$id/$id2'
+      fullPath: '/api/try/$id/$id2'
+      preLoaderRoute: typeof ApiTryIdId2RouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
-  AboutRoute: AboutRoute,
   AssetsRoute: AssetsRoute,
   DuplicatesRoute: DuplicatesRoute,
   PingRoute: PingRoute,
   ApiMarkForDeletionRoute: ApiMarkForDeletionRoute,
   ApiNikonLowResRoute: ApiNikonLowResRoute,
+  ReviewNikonLowResRoute: ReviewNikonLowResRoute,
   ApiSimilarIdRoute: ApiSimilarIdRoute,
   ApiThumbnailIdRoute: ApiThumbnailIdRoute,
+  ApiTryIdId2Route: ApiTryIdId2Route,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

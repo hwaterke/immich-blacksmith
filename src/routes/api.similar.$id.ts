@@ -1,7 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {z} from 'zod'
-import {db} from '../db'
-import {sql} from 'kysely'
+import {findSimilarAssetIds} from '../lib/assetQueries'
 
 export const Route = createFileRoute('/api/similar/$id')({
   validateSearch: z.object({
@@ -9,43 +8,13 @@ export const Route = createFileRoute('/api/similar/$id')({
   }),
   server: {
     handlers: {
-      GET: async ({params}) => {
-        const assetId = params.id
-        const maxDistance = 0.01
-        const probes = 1
+      GET: async ({params, request}) => {
+        const url = new URL(request.url)
+        const raw = url.searchParams.get('maxDistance')
+        const parsed = raw != null ? Number(raw) : NaN
+        const maxDistance = Number.isFinite(parsed) ? parsed : 0.01
 
-        const results = await db.transaction().execute(async (trx) => {
-          await sql`set local vchordrq.probes = ${sql.lit(probes)}`.execute(trx)
-
-          // Look up the source embedding (cast number[] -> vector at call time).
-          const source = await trx
-            .selectFrom('smart_search')
-            .select('embedding')
-            .where('assetId', '=', assetId)
-            .executeTakeFirstOrThrow()
-
-          return trx
-            .with('cte', (qb) =>
-              qb
-                .selectFrom('asset')
-                .innerJoin('smart_search', 'asset.id', 'smart_search.assetId')
-                .select([
-                  'asset.id as assetId',
-                  sql<number>`smart_search.embedding <=> ${source.embedding}`.as(
-                    'distance',
-                  ),
-                ])
-                .where('asset.deletedAt', 'is', null)
-                .where('asset.id', '!=', assetId)
-                .orderBy('distance')
-                .limit(64),
-            )
-            .selectFrom('cte')
-            .selectAll()
-            .where('cte.distance', '<=', maxDistance)
-            .execute()
-        })
-
+        const {results} = await findSimilarAssetIds(params.id, maxDistance)
         return Response.json({results})
       },
     },

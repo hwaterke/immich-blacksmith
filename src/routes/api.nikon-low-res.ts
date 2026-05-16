@@ -1,16 +1,11 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {db} from '../db'
+import {getNikonLowResAssets} from '../lib/assetQueries'
 
 export const Route = createFileRoute('/api/nikon-low-res')({
   server: {
     handlers: {
       GET: async () => {
-        const lowResAssets = await db
-          .selectFrom('asset')
-          .select(['asset.id', 'asset.originalPath'])
-          .where('asset.originalPath', 'like', '%to-sort/nikon-low-res%')
-          .execute()
-
+        const lowResAssets = await getNikonLowResAssets()
         return Response.json({lowResAssets})
       },
     },
