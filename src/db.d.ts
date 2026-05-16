@@ -3,714 +3,719 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from "kysely";
+import type {ColumnType} from 'kysely'
 
-export type AssetChecksumAlgorithmEnum = "sha1" | "sha1-path";
+export type AssetChecksumAlgorithmEnum = 'sha1' | 'sha1-path'
 
-export type AssetsStatusEnum = "active" | "deleted" | "trashed";
+export type AssetsStatusEnum = 'active' | 'deleted' | 'trashed'
 
-export type AssetVisibilityEnum = "archive" | "hidden" | "locked" | "timeline";
+export type AssetVisibilityEnum = 'archive' | 'hidden' | 'locked' | 'timeline'
 
-export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
-  ? ColumnType<S, I | undefined, U>
-  : ColumnType<T, T | undefined, T>;
+export type Generated<T> =
+  T extends ColumnType<infer S, infer I, infer U>
+    ? ColumnType<S, I | undefined, U>
+    : ColumnType<T, T | undefined, T>
 
-export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
+export type Int8 = ColumnType<
+  string,
+  bigint | number | string,
+  bigint | number | string
+>
 
-export type Json = JsonValue;
+export type Json = JsonValue
 
-export type JsonArray = JsonValue[];
+export type JsonArray = JsonValue[]
 
 export type JsonObject = {
-  [x: string]: JsonValue | undefined;
-};
+  [x: string]: JsonValue | undefined
+}
 
-export type JsonPrimitive = boolean | number | string | null;
+export type JsonPrimitive = boolean | number | string | null
 
-export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
+export type JsonValue = JsonArray | JsonObject | JsonPrimitive
 
-export type Sourcetype = "exif" | "machine-learning" | "manual";
+export type Sourcetype = 'exif' | 'machine-learning' | 'manual'
 
-export type Timestamp = ColumnType<Date, Date | string, Date | string>;
+export type Timestamp = ColumnType<Date, Date | string, Date | string>
 
 export interface Activity {
-  albumId: string;
-  assetId: string | null;
-  comment: string | null;
-  createdAt: Generated<Timestamp>;
-  id: Generated<string>;
-  isLiked: Generated<boolean>;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  userId: string;
+  albumId: string
+  assetId: string | null
+  comment: string | null
+  createdAt: Generated<Timestamp>
+  id: Generated<string>
+  isLiked: Generated<boolean>
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  userId: string
 }
 
 export interface Album {
-  albumName: Generated<string>;
+  albumName: Generated<string>
   /**
    * Asset ID to be used as thumbnail
    */
-  albumThumbnailAssetId: string | null;
-  createdAt: Generated<Timestamp>;
-  deletedAt: Timestamp | null;
-  description: Generated<string>;
-  id: Generated<string>;
-  isActivityEnabled: Generated<boolean>;
-  order: Generated<string>;
-  ownerId: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  albumThumbnailAssetId: string | null
+  createdAt: Generated<Timestamp>
+  deletedAt: Timestamp | null
+  description: Generated<string>
+  id: Generated<string>
+  isActivityEnabled: Generated<boolean>
+  order: Generated<string>
+  ownerId: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface AlbumAsset {
-  albumId: string;
-  assetId: string;
-  createdAt: Generated<Timestamp>;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  albumId: string
+  assetId: string
+  createdAt: Generated<Timestamp>
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface AlbumAssetAudit {
-  albumId: string;
-  assetId: string;
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
+  albumId: string
+  assetId: string
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
 }
 
 export interface AlbumAudit {
-  albumId: string;
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  userId: string;
+  albumId: string
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  userId: string
 }
 
 export interface AlbumUser {
-  albumId: string;
-  createdAt: Generated<Timestamp>;
-  createId: Generated<string>;
-  role: Generated<string>;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  userId: string;
+  albumId: string
+  createdAt: Generated<Timestamp>
+  createId: Generated<string>
+  role: Generated<string>
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  userId: string
 }
 
 export interface AlbumUserAudit {
-  albumId: string;
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  userId: string;
+  albumId: string
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  userId: string
 }
 
 export interface ApiKey {
-  createdAt: Generated<Timestamp>;
-  id: Generated<string>;
-  key: Buffer;
-  name: string;
-  permissions: string[];
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  userId: string;
+  createdAt: Generated<Timestamp>
+  id: Generated<string>
+  key: Buffer
+  name: string
+  permissions: string[]
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  userId: string
 }
 
 export interface Asset {
-  checksum: Buffer;
-  checksumAlgorithm: AssetChecksumAlgorithmEnum;
-  createdAt: Generated<Timestamp>;
-  deletedAt: Timestamp | null;
-  deviceAssetId: string;
-  deviceId: string;
-  duplicateId: string | null;
-  duration: string | null;
-  fileCreatedAt: Timestamp;
-  fileModifiedAt: Timestamp;
-  height: number | null;
-  id: Generated<string>;
-  isEdited: Generated<boolean>;
-  isExternal: Generated<boolean>;
-  isFavorite: Generated<boolean>;
-  isOffline: Generated<boolean>;
-  libraryId: string | null;
-  livePhotoVideoId: string | null;
-  localDateTime: Timestamp;
-  originalFileName: string;
-  originalPath: string;
-  ownerId: string;
-  stackId: string | null;
-  status: Generated<AssetsStatusEnum>;
-  thumbhash: Buffer | null;
-  type: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  visibility: Generated<AssetVisibilityEnum>;
-  width: number | null;
+  checksum: Buffer
+  checksumAlgorithm: AssetChecksumAlgorithmEnum
+  createdAt: Generated<Timestamp>
+  deletedAt: Timestamp | null
+  deviceAssetId: string
+  deviceId: string
+  duplicateId: string | null
+  duration: string | null
+  fileCreatedAt: Timestamp
+  fileModifiedAt: Timestamp
+  height: number | null
+  id: Generated<string>
+  isEdited: Generated<boolean>
+  isExternal: Generated<boolean>
+  isFavorite: Generated<boolean>
+  isOffline: Generated<boolean>
+  libraryId: string | null
+  livePhotoVideoId: string | null
+  localDateTime: Timestamp
+  originalFileName: string
+  originalPath: string
+  ownerId: string
+  stackId: string | null
+  status: Generated<AssetsStatusEnum>
+  thumbhash: Buffer | null
+  type: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  visibility: Generated<AssetVisibilityEnum>
+  width: number | null
 }
 
 export interface AssetAudit {
-  assetId: string;
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  ownerId: string;
+  assetId: string
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  ownerId: string
 }
 
 export interface AssetEdit {
-  action: string;
-  assetId: string;
-  id: Generated<string>;
-  parameters: Json;
-  sequence: number;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  action: string
+  assetId: string
+  id: Generated<string>
+  parameters: Json
+  sequence: number
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface AssetEditAudit {
-  assetId: string;
-  deletedAt: Generated<Timestamp>;
-  editId: string;
-  id: Generated<string>;
+  assetId: string
+  deletedAt: Generated<Timestamp>
+  editId: string
+  id: Generated<string>
 }
 
 export interface AssetExif {
-  assetId: string;
-  autoStackId: string | null;
-  bitsPerSample: number | null;
-  city: string | null;
-  colorspace: string | null;
-  country: string | null;
-  dateTimeOriginal: Timestamp | null;
-  description: Generated<string>;
-  exifImageHeight: number | null;
-  exifImageWidth: number | null;
-  exposureTime: string | null;
-  fileSizeInByte: Int8 | null;
-  fNumber: number | null;
-  focalLength: number | null;
-  fps: number | null;
-  iso: number | null;
-  latitude: number | null;
-  lensModel: string | null;
-  livePhotoCID: string | null;
-  lockedProperties: string[] | null;
-  longitude: number | null;
-  make: string | null;
-  model: string | null;
-  modifyDate: Timestamp | null;
-  orientation: string | null;
-  profileDescription: string | null;
-  projectionType: string | null;
-  rating: number | null;
-  state: string | null;
-  tags: string[] | null;
-  timeZone: string | null;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  assetId: string
+  autoStackId: string | null
+  bitsPerSample: number | null
+  city: string | null
+  colorspace: string | null
+  country: string | null
+  dateTimeOriginal: Timestamp | null
+  description: Generated<string>
+  exifImageHeight: number | null
+  exifImageWidth: number | null
+  exposureTime: string | null
+  fileSizeInByte: Int8 | null
+  fNumber: number | null
+  focalLength: number | null
+  fps: number | null
+  iso: number | null
+  latitude: number | null
+  lensModel: string | null
+  livePhotoCID: string | null
+  lockedProperties: string[] | null
+  longitude: number | null
+  make: string | null
+  model: string | null
+  modifyDate: Timestamp | null
+  orientation: string | null
+  profileDescription: string | null
+  projectionType: string | null
+  rating: number | null
+  state: string | null
+  tags: string[] | null
+  timeZone: string | null
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface AssetFace {
-  assetId: string;
-  boundingBoxX1: Generated<number>;
-  boundingBoxX2: Generated<number>;
-  boundingBoxY1: Generated<number>;
-  boundingBoxY2: Generated<number>;
-  deletedAt: Timestamp | null;
-  id: Generated<string>;
-  imageHeight: Generated<number>;
-  imageWidth: Generated<number>;
-  isVisible: Generated<boolean>;
-  personId: string | null;
-  sourceType: Generated<Sourcetype>;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  assetId: string
+  boundingBoxX1: Generated<number>
+  boundingBoxX2: Generated<number>
+  boundingBoxY1: Generated<number>
+  boundingBoxY2: Generated<number>
+  deletedAt: Timestamp | null
+  id: Generated<string>
+  imageHeight: Generated<number>
+  imageWidth: Generated<number>
+  isVisible: Generated<boolean>
+  personId: string | null
+  sourceType: Generated<Sourcetype>
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface AssetFaceAudit {
-  assetFaceId: string;
-  assetId: string;
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
+  assetFaceId: string
+  assetId: string
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
 }
 
 export interface AssetFile {
-  assetId: string;
-  createdAt: Generated<Timestamp>;
-  id: Generated<string>;
-  isEdited: Generated<boolean>;
-  isProgressive: Generated<boolean>;
-  isTransparent: Generated<boolean>;
-  path: string;
-  type: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  assetId: string
+  createdAt: Generated<Timestamp>
+  id: Generated<string>
+  isEdited: Generated<boolean>
+  isProgressive: Generated<boolean>
+  isTransparent: Generated<boolean>
+  path: string
+  type: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface AssetJobStatus {
-  assetId: string;
-  duplicatesDetectedAt: Timestamp | null;
-  facesRecognizedAt: Timestamp | null;
-  metadataExtractedAt: Timestamp | null;
-  ocrAt: Timestamp | null;
+  assetId: string
+  duplicatesDetectedAt: Timestamp | null
+  facesRecognizedAt: Timestamp | null
+  metadataExtractedAt: Timestamp | null
+  ocrAt: Timestamp | null
 }
 
 export interface AssetMetadata {
-  assetId: string;
-  key: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  value: Json;
+  assetId: string
+  key: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  value: Json
 }
 
 export interface AssetMetadataAudit {
-  assetId: string;
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  key: string;
+  assetId: string
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  key: string
 }
 
 export interface AssetOcr {
-  assetId: string;
-  boxScore: number;
-  id: Generated<string>;
-  isVisible: Generated<boolean>;
-  text: string;
-  textScore: number;
-  x1: number;
-  x2: number;
-  x3: number;
-  x4: number;
-  y1: number;
-  y2: number;
-  y3: number;
-  y4: number;
+  assetId: string
+  boxScore: number
+  id: Generated<string>
+  isVisible: Generated<boolean>
+  text: string
+  textScore: number
+  x1: number
+  x2: number
+  x3: number
+  x4: number
+  y1: number
+  y2: number
+  y3: number
+  y4: number
 }
 
 export interface Audit {
-  action: string;
-  createdAt: Generated<Timestamp>;
-  entityId: string;
-  entityType: string;
-  id: Generated<number>;
-  ownerId: string;
+  action: string
+  createdAt: Generated<Timestamp>
+  entityId: string
+  entityType: string
+  id: Generated<number>
+  ownerId: string
 }
 
 export interface FaceSearch {
-  embedding: string;
-  faceId: string;
+  embedding: string
+  faceId: string
 }
 
 export interface GeodataPlaces {
-  admin1Code: string | null;
-  admin1Name: string | null;
-  admin2Code: string | null;
-  admin2Name: string | null;
-  alternateNames: string | null;
-  countryCode: string;
-  id: number;
-  latitude: number;
-  longitude: number;
-  modificationDate: Timestamp;
-  name: string;
+  admin1Code: string | null
+  admin1Name: string | null
+  admin2Code: string | null
+  admin2Name: string | null
+  alternateNames: string | null
+  countryCode: string
+  id: number
+  latitude: number
+  longitude: number
+  modificationDate: Timestamp
+  name: string
 }
 
 export interface KyselyMigrations {
-  name: string;
-  timestamp: string;
+  name: string
+  timestamp: string
 }
 
 export interface KyselyMigrationsLock {
-  id: string;
-  is_locked: Generated<number>;
+  id: string
+  is_locked: Generated<number>
 }
 
 export interface Library {
-  createdAt: Generated<Timestamp>;
-  deletedAt: Timestamp | null;
-  exclusionPatterns: string[];
-  id: Generated<string>;
-  importPaths: string[];
-  name: string;
-  ownerId: string;
-  refreshedAt: Timestamp | null;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  createdAt: Generated<Timestamp>
+  deletedAt: Timestamp | null
+  exclusionPatterns: string[]
+  id: Generated<string>
+  importPaths: string[]
+  name: string
+  ownerId: string
+  refreshedAt: Timestamp | null
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface Memory {
-  createdAt: Generated<Timestamp>;
-  data: Json;
-  deletedAt: Timestamp | null;
-  hideAt: Timestamp | null;
-  id: Generated<string>;
-  isSaved: Generated<boolean>;
-  memoryAt: Timestamp;
-  ownerId: string;
-  seenAt: Timestamp | null;
-  showAt: Timestamp | null;
-  type: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  createdAt: Generated<Timestamp>
+  data: Json
+  deletedAt: Timestamp | null
+  hideAt: Timestamp | null
+  id: Generated<string>
+  isSaved: Generated<boolean>
+  memoryAt: Timestamp
+  ownerId: string
+  seenAt: Timestamp | null
+  showAt: Timestamp | null
+  type: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface MemoryAsset {
-  assetId: string;
-  createdAt: Generated<Timestamp>;
-  memoriesId: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  assetId: string
+  createdAt: Generated<Timestamp>
+  memoriesId: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface MemoryAssetAudit {
-  assetId: string;
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  memoryId: string;
+  assetId: string
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  memoryId: string
 }
 
 export interface MemoryAudit {
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  memoryId: string;
-  userId: string;
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  memoryId: string
+  userId: string
 }
 
 export interface MigrationOverrides {
-  name: string;
-  value: Json;
+  name: string
+  value: Json
 }
 
 export interface MoveHistory {
-  entityId: string;
-  id: Generated<string>;
-  newPath: string;
-  oldPath: string;
-  pathType: string;
+  entityId: string
+  id: Generated<string>
+  newPath: string
+  oldPath: string
+  pathType: string
 }
 
 export interface NaturalearthCountries {
-  admin: string;
-  admin_a3: string;
-  coordinates: string;
-  id: Generated<number>;
-  type: string;
+  admin: string
+  admin_a3: string
+  coordinates: string
+  id: Generated<number>
+  type: string
 }
 
 export interface Notification {
-  createdAt: Generated<Timestamp>;
-  data: Json | null;
-  deletedAt: Timestamp | null;
-  description: string | null;
-  id: Generated<string>;
-  level: Generated<string>;
-  readAt: Timestamp | null;
-  title: string;
-  type: Generated<string>;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  userId: string | null;
+  createdAt: Generated<Timestamp>
+  data: Json | null
+  deletedAt: Timestamp | null
+  description: string | null
+  id: Generated<string>
+  level: Generated<string>
+  readAt: Timestamp | null
+  title: string
+  type: Generated<string>
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  userId: string | null
 }
 
 export interface OcrSearch {
-  assetId: string;
-  text: string;
+  assetId: string
+  text: string
 }
 
 export interface Partner {
-  createdAt: Generated<Timestamp>;
-  createId: Generated<string>;
-  inTimeline: Generated<boolean>;
-  sharedById: string;
-  sharedWithId: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  createdAt: Generated<Timestamp>
+  createId: Generated<string>
+  inTimeline: Generated<boolean>
+  sharedById: string
+  sharedWithId: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface PartnerAudit {
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  sharedById: string;
-  sharedWithId: string;
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  sharedById: string
+  sharedWithId: string
 }
 
 export interface Person {
-  birthDate: Timestamp | null;
-  color: string | null;
-  createdAt: Generated<Timestamp>;
-  faceAssetId: string | null;
-  id: Generated<string>;
-  isFavorite: Generated<boolean>;
-  isHidden: Generated<boolean>;
-  name: Generated<string>;
-  ownerId: string;
-  thumbnailPath: Generated<string>;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  birthDate: Timestamp | null
+  color: string | null
+  createdAt: Generated<Timestamp>
+  faceAssetId: string | null
+  id: Generated<string>
+  isFavorite: Generated<boolean>
+  isHidden: Generated<boolean>
+  name: Generated<string>
+  ownerId: string
+  thumbnailPath: Generated<string>
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface PersonAudit {
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  ownerId: string;
-  personId: string;
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  ownerId: string
+  personId: string
 }
 
 export interface Plugin {
-  author: string;
-  createdAt: Generated<Timestamp>;
-  description: string;
-  id: Generated<string>;
-  name: string;
-  title: string;
-  updatedAt: Generated<Timestamp>;
-  version: string;
-  wasmPath: string;
+  author: string
+  createdAt: Generated<Timestamp>
+  description: string
+  id: Generated<string>
+  name: string
+  title: string
+  updatedAt: Generated<Timestamp>
+  version: string
+  wasmPath: string
 }
 
 export interface PluginAction {
-  description: string;
-  id: Generated<string>;
-  methodName: string;
-  pluginId: string;
-  schema: Json | null;
-  supportedContexts: string[];
-  title: string;
+  description: string
+  id: Generated<string>
+  methodName: string
+  pluginId: string
+  schema: Json | null
+  supportedContexts: string[]
+  title: string
 }
 
 export interface PluginFilter {
-  description: string;
-  id: Generated<string>;
-  methodName: string;
-  pluginId: string;
-  schema: Json | null;
-  supportedContexts: string[];
-  title: string;
+  description: string
+  id: Generated<string>
+  methodName: string
+  pluginId: string
+  schema: Json | null
+  supportedContexts: string[]
+  title: string
 }
 
 export interface Session {
-  appVersion: string | null;
-  createdAt: Generated<Timestamp>;
-  deviceOS: Generated<string>;
-  deviceType: Generated<string>;
-  expiresAt: Timestamp | null;
-  id: Generated<string>;
-  isPendingSyncReset: Generated<boolean>;
-  parentId: string | null;
-  pinExpiresAt: Timestamp | null;
-  token: Buffer;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  userId: string;
+  appVersion: string | null
+  createdAt: Generated<Timestamp>
+  deviceOS: Generated<string>
+  deviceType: Generated<string>
+  expiresAt: Timestamp | null
+  id: Generated<string>
+  isPendingSyncReset: Generated<boolean>
+  parentId: string | null
+  pinExpiresAt: Timestamp | null
+  token: Buffer
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  userId: string
 }
 
 export interface SessionSyncCheckpoint {
-  ack: string;
-  createdAt: Generated<Timestamp>;
-  sessionId: string;
-  type: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  ack: string
+  createdAt: Generated<Timestamp>
+  sessionId: string
+  type: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface SharedLink {
-  albumId: string | null;
-  allowDownload: Generated<boolean>;
-  allowUpload: Generated<boolean>;
-  createdAt: Generated<Timestamp>;
-  description: string | null;
-  expiresAt: Timestamp | null;
-  id: Generated<string>;
-  key: Buffer;
-  password: string | null;
-  showExif: Generated<boolean>;
-  slug: string | null;
-  type: string;
-  userId: string;
+  albumId: string | null
+  allowDownload: Generated<boolean>
+  allowUpload: Generated<boolean>
+  createdAt: Generated<Timestamp>
+  description: string | null
+  expiresAt: Timestamp | null
+  id: Generated<string>
+  key: Buffer
+  password: string | null
+  showExif: Generated<boolean>
+  slug: string | null
+  type: string
+  userId: string
 }
 
 export interface SharedLinkAsset {
-  assetId: string;
-  sharedLinkId: string;
+  assetId: string
+  sharedLinkId: string
 }
 
 export interface SmartSearch {
-  assetId: string;
-  embedding: string;
+  assetId: string
+  embedding: string
 }
 
 export interface Stack {
-  createdAt: Generated<Timestamp>;
-  id: Generated<string>;
-  ownerId: string;
-  primaryAssetId: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  createdAt: Generated<Timestamp>
+  id: Generated<string>
+  ownerId: string
+  primaryAssetId: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface StackAudit {
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  stackId: string;
-  userId: string;
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  stackId: string
+  userId: string
 }
 
 export interface SystemMetadata {
-  key: string;
-  value: Json;
+  key: string
+  value: Json
 }
 
 export interface Tag {
-  color: string | null;
-  createdAt: Generated<Timestamp>;
-  id: Generated<string>;
-  parentId: string | null;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  userId: string;
-  value: string;
+  color: string | null
+  createdAt: Generated<Timestamp>
+  id: Generated<string>
+  parentId: string | null
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  userId: string
+  value: string
 }
 
 export interface TagAsset {
-  assetId: string;
-  tagId: string;
+  assetId: string
+  tagId: string
 }
 
 export interface TagClosure {
-  id_ancestor: string;
-  id_descendant: string;
+  id_ancestor: string
+  id_descendant: string
 }
 
 export interface User {
-  avatarColor: string | null;
-  createdAt: Generated<Timestamp>;
-  deletedAt: Timestamp | null;
-  email: string;
-  id: Generated<string>;
-  isAdmin: Generated<boolean>;
-  name: Generated<string>;
-  oauthId: Generated<string>;
-  password: Generated<string>;
-  pinCode: string | null;
-  profileChangedAt: Generated<Timestamp>;
-  profileImagePath: Generated<string>;
-  quotaSizeInBytes: Int8 | null;
-  quotaUsageInBytes: Generated<Int8>;
-  shouldChangePassword: Generated<boolean>;
-  status: Generated<string>;
-  storageLabel: string | null;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
+  avatarColor: string | null
+  createdAt: Generated<Timestamp>
+  deletedAt: Timestamp | null
+  email: string
+  id: Generated<string>
+  isAdmin: Generated<boolean>
+  name: Generated<string>
+  oauthId: Generated<string>
+  password: Generated<string>
+  pinCode: string | null
+  profileChangedAt: Generated<Timestamp>
+  profileImagePath: Generated<string>
+  quotaSizeInBytes: Int8 | null
+  quotaUsageInBytes: Generated<Int8>
+  shouldChangePassword: Generated<boolean>
+  status: Generated<string>
+  storageLabel: string | null
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
 }
 
 export interface UserAudit {
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  userId: string;
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  userId: string
 }
 
 export interface UserMetadata {
-  key: string;
-  updatedAt: Generated<Timestamp>;
-  updateId: Generated<string>;
-  userId: string;
-  value: Json;
+  key: string
+  updatedAt: Generated<Timestamp>
+  updateId: Generated<string>
+  userId: string
+  value: Json
 }
 
 export interface UserMetadataAudit {
-  deletedAt: Generated<Timestamp>;
-  id: Generated<string>;
-  key: string;
-  userId: string;
+  deletedAt: Generated<Timestamp>
+  id: Generated<string>
+  key: string
+  userId: string
 }
 
 export interface VersionHistory {
-  createdAt: Generated<Timestamp>;
-  id: Generated<string>;
-  version: string;
+  createdAt: Generated<Timestamp>
+  id: Generated<string>
+  version: string
 }
 
 export interface Workflow {
-  createdAt: Generated<Timestamp>;
-  description: string;
-  enabled: Generated<boolean>;
-  id: Generated<string>;
-  name: string | null;
-  ownerId: string;
-  triggerType: string;
+  createdAt: Generated<Timestamp>
+  description: string
+  enabled: Generated<boolean>
+  id: Generated<string>
+  name: string | null
+  ownerId: string
+  triggerType: string
 }
 
 export interface WorkflowAction {
-  actionConfig: Json | null;
-  id: Generated<string>;
-  order: number;
-  pluginActionId: string;
-  workflowId: string;
+  actionConfig: Json | null
+  id: Generated<string>
+  order: number
+  pluginActionId: string
+  workflowId: string
 }
 
 export interface WorkflowFilter {
-  filterConfig: Json | null;
-  id: Generated<string>;
-  order: number;
-  pluginFilterId: string;
-  workflowId: string;
+  filterConfig: Json | null
+  id: Generated<string>
+  order: number
+  pluginFilterId: string
+  workflowId: string
 }
 
 export interface DB {
-  activity: Activity;
-  album: Album;
-  album_asset: AlbumAsset;
-  album_asset_audit: AlbumAssetAudit;
-  album_audit: AlbumAudit;
-  album_user: AlbumUser;
-  album_user_audit: AlbumUserAudit;
-  api_key: ApiKey;
-  asset: Asset;
-  asset_audit: AssetAudit;
-  asset_edit: AssetEdit;
-  asset_edit_audit: AssetEditAudit;
-  asset_exif: AssetExif;
-  asset_face: AssetFace;
-  asset_face_audit: AssetFaceAudit;
-  asset_file: AssetFile;
-  asset_job_status: AssetJobStatus;
-  asset_metadata: AssetMetadata;
-  asset_metadata_audit: AssetMetadataAudit;
-  asset_ocr: AssetOcr;
-  audit: Audit;
-  face_search: FaceSearch;
-  geodata_places: GeodataPlaces;
-  kysely_migrations: KyselyMigrations;
-  kysely_migrations_lock: KyselyMigrationsLock;
-  library: Library;
-  memory: Memory;
-  memory_asset: MemoryAsset;
-  memory_asset_audit: MemoryAssetAudit;
-  memory_audit: MemoryAudit;
-  migration_overrides: MigrationOverrides;
-  move_history: MoveHistory;
-  naturalearth_countries: NaturalearthCountries;
-  notification: Notification;
-  ocr_search: OcrSearch;
-  partner: Partner;
-  partner_audit: PartnerAudit;
-  person: Person;
-  person_audit: PersonAudit;
-  plugin: Plugin;
-  plugin_action: PluginAction;
-  plugin_filter: PluginFilter;
-  session: Session;
-  session_sync_checkpoint: SessionSyncCheckpoint;
-  shared_link: SharedLink;
-  shared_link_asset: SharedLinkAsset;
-  smart_search: SmartSearch;
-  stack: Stack;
-  stack_audit: StackAudit;
-  system_metadata: SystemMetadata;
-  tag: Tag;
-  tag_asset: TagAsset;
-  tag_closure: TagClosure;
-  user: User;
-  user_audit: UserAudit;
-  user_metadata: UserMetadata;
-  user_metadata_audit: UserMetadataAudit;
-  version_history: VersionHistory;
-  workflow: Workflow;
-  workflow_action: WorkflowAction;
-  workflow_filter: WorkflowFilter;
+  activity: Activity
+  album: Album
+  album_asset: AlbumAsset
+  album_asset_audit: AlbumAssetAudit
+  album_audit: AlbumAudit
+  album_user: AlbumUser
+  album_user_audit: AlbumUserAudit
+  api_key: ApiKey
+  asset: Asset
+  asset_audit: AssetAudit
+  asset_edit: AssetEdit
+  asset_edit_audit: AssetEditAudit
+  asset_exif: AssetExif
+  asset_face: AssetFace
+  asset_face_audit: AssetFaceAudit
+  asset_file: AssetFile
+  asset_job_status: AssetJobStatus
+  asset_metadata: AssetMetadata
+  asset_metadata_audit: AssetMetadataAudit
+  asset_ocr: AssetOcr
+  audit: Audit
+  face_search: FaceSearch
+  geodata_places: GeodataPlaces
+  kysely_migrations: KyselyMigrations
+  kysely_migrations_lock: KyselyMigrationsLock
+  library: Library
+  memory: Memory
+  memory_asset: MemoryAsset
+  memory_asset_audit: MemoryAssetAudit
+  memory_audit: MemoryAudit
+  migration_overrides: MigrationOverrides
+  move_history: MoveHistory
+  naturalearth_countries: NaturalearthCountries
+  notification: Notification
+  ocr_search: OcrSearch
+  partner: Partner
+  partner_audit: PartnerAudit
+  person: Person
+  person_audit: PersonAudit
+  plugin: Plugin
+  plugin_action: PluginAction
+  plugin_filter: PluginFilter
+  session: Session
+  session_sync_checkpoint: SessionSyncCheckpoint
+  shared_link: SharedLink
+  shared_link_asset: SharedLinkAsset
+  smart_search: SmartSearch
+  stack: Stack
+  stack_audit: StackAudit
+  system_metadata: SystemMetadata
+  tag: Tag
+  tag_asset: TagAsset
+  tag_closure: TagClosure
+  user: User
+  user_audit: UserAudit
+  user_metadata: UserMetadata
+  user_metadata_audit: UserMetadataAudit
+  version_history: VersionHistory
+  workflow: Workflow
+  workflow_action: WorkflowAction
+  workflow_filter: WorkflowFilter
 }

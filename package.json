@@ -16,6 +16,7 @@
     "db:introspect": "kysely-codegen --out-file=src/db.d.ts --dialect=postgres --type-only-imports"
   },
   "dependencies": {
+    "@immich/sdk": "^2.7.5",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
     "@tanstack/react-router": "latest",
@@ -33,7 +34,8 @@
     "react-dom": "^19.2.0",
     "tailwind-merge": "^3.0.2",
     "tailwindcss": "^4.1.18",
-    "tw-animate-css": "^1.3.6"
+    "tw-animate-css": "^1.3.6",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@rolldown/plugin-babel": "^0.2.3",

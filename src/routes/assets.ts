@@ -1,5 +1,5 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { db } from '../db'
+import {createFileRoute} from '@tanstack/react-router'
+import {db} from '../db'
 
 export const Route = createFileRoute('/assets')({
   server: {
@@ -8,9 +8,9 @@ export const Route = createFileRoute('/assets')({
         // Return total number of assets
         const totalAssets = await db
           .selectFrom('asset')
-          .select(({ fn }) => [fn.count('asset.id').as('total_assets')])
+          .select(({fn}) => [fn.count('asset.id').as('total_assets')])
           .execute()
-        return Response.json({ totalAssets })
+        return Response.json({totalAssets})
       },
     },
   },
