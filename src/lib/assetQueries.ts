@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 import {sql} from 'kysely'
 import {db} from '../db'
 

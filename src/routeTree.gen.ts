@@ -16,6 +16,7 @@ import {Route as IndexRouteImport} from './routes/index'
 import {Route as ReviewNikonLowResRouteImport} from './routes/review.nikon-low-res'
 import {Route as ApiNikonLowResRouteImport} from './routes/api.nikon-low-res'
 import {Route as ApiMarkForDeletionRouteImport} from './routes/api.mark-for-deletion'
+import {Route as ReviewDuplicatesAssetIdRouteImport} from './routes/review.duplicates.$assetId'
 import {Route as ApiThumbnailIdRouteImport} from './routes/api.thumbnail.$id'
 import {Route as ApiSimilarIdRouteImport} from './routes/api.similar.$id'
 import {Route as ApiTryIdId2RouteImport} from './routes/api.try.$id.$id2'
@@ -55,6 +56,11 @@ const ApiMarkForDeletionRoute = ApiMarkForDeletionRouteImport.update({
   path: '/api/mark-for-deletion',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReviewDuplicatesAssetIdRoute = ReviewDuplicatesAssetIdRouteImport.update({
+  id: '/review/duplicates/$assetId',
+  path: '/review/duplicates/$assetId',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiThumbnailIdRoute = ApiThumbnailIdRouteImport.update({
   id: '/api/thumbnail/$id',
   path: '/api/thumbnail/$id',
@@ -81,6 +87,7 @@ export interface FileRoutesByFullPath {
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/review/duplicates/$assetId': typeof ReviewDuplicatesAssetIdRoute
   '/api/try/$id/$id2': typeof ApiTryIdId2Route
 }
 export interface FileRoutesByTo {
@@ -93,6 +100,7 @@ export interface FileRoutesByTo {
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/review/duplicates/$assetId': typeof ReviewDuplicatesAssetIdRoute
   '/api/try/$id/$id2': typeof ApiTryIdId2Route
 }
 export interface FileRoutesById {
@@ -106,6 +114,7 @@ export interface FileRoutesById {
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/review/duplicates/$assetId': typeof ReviewDuplicatesAssetIdRoute
   '/api/try/$id/$id2': typeof ApiTryIdId2Route
 }
 export interface FileRouteTypes {
@@ -120,6 +129,7 @@ export interface FileRouteTypes {
     | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/review/duplicates/$assetId'
     | '/api/try/$id/$id2'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -132,6 +142,7 @@ export interface FileRouteTypes {
     | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/review/duplicates/$assetId'
     | '/api/try/$id/$id2'
   id:
     | '__root__'
@@ -144,6 +155,7 @@ export interface FileRouteTypes {
     | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/review/duplicates/$assetId'
     | '/api/try/$id/$id2'
   fileRoutesById: FileRoutesById
 }
@@ -157,6 +169,7 @@ export interface RootRouteChildren {
   ReviewNikonLowResRoute: typeof ReviewNikonLowResRoute
   ApiSimilarIdRoute: typeof ApiSimilarIdRoute
   ApiThumbnailIdRoute: typeof ApiThumbnailIdRoute
+  ReviewDuplicatesAssetIdRoute: typeof ReviewDuplicatesAssetIdRoute
   ApiTryIdId2Route: typeof ApiTryIdId2Route
 }
 
@@ -211,6 +224,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMarkForDeletionRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/review/duplicates/$assetId': {
+      id: '/review/duplicates/$assetId'
+      path: '/review/duplicates/$assetId'
+      fullPath: '/review/duplicates/$assetId'
+      preLoaderRoute: typeof ReviewDuplicatesAssetIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/thumbnail/$id': {
       id: '/api/thumbnail/$id'
       path: '/api/thumbnail/$id'
@@ -245,6 +265,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReviewNikonLowResRoute: ReviewNikonLowResRoute,
   ApiSimilarIdRoute: ApiSimilarIdRoute,
   ApiThumbnailIdRoute: ApiThumbnailIdRoute,
+  ReviewDuplicatesAssetIdRoute: ReviewDuplicatesAssetIdRoute,
   ApiTryIdId2Route: ApiTryIdId2Route,
 }
 export const routeTree = rootRouteImport

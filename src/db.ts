@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 import {Kysely, PostgresDialect} from 'kysely'
 import {Pool} from 'pg'
 import type {DB} from './db.d'
