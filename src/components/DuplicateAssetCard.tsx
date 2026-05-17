@@ -21,6 +21,7 @@ interface Props {
   distance?: number
   reference?: AssetResponseDto
   label: string
+  immichWebUrl: string
 }
 
 function formatBytes(bytes: number | null | undefined): string {
@@ -210,6 +211,7 @@ export function DuplicateAssetCard({
   distance,
   reference,
   label,
+  immichWebUrl,
 }: Props) {
   const [marked, setMarked] = useState(false)
   const [submitting, setSubmitting] = useState(false)
@@ -366,17 +368,17 @@ export function DuplicateAssetCard({
       </div>
 
       <a
-        href={`/api/thumbnail/${asset.id}`}
+        href={`${immichWebUrl}/photos/${asset.id}`}
         target="_blank"
         rel="noopener noreferrer"
         className="relative mx-4 mt-3 block overflow-hidden rounded-md"
         style={{background: 'var(--surface-2)'}}
-        title="Open full thumbnail in new tab"
+        title="Open in Immich"
       >
         <img
           src={`/api/thumbnail/${asset.id}`}
           alt={asset.originalFileName}
-          className="h-64 w-full object-cover transition"
+          className="h-64 w-full object-contain transition"
           loading="lazy"
           style={{opacity: marked ? 0.45 : 1}}
         />

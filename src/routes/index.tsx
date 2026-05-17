@@ -5,18 +5,11 @@ export const Route = createFileRoute('/')({component: App})
 interface ToolCard {
   title: string
   description: string
-  href: '/duplicates' | '/review/nikon-low-res'
+  href: '/review/nikon-low-res'
   search?: Record<string, unknown>
 }
 
 const tools: ToolCard[] = [
-  {
-    title: 'Duplicate review',
-    description:
-      'Compare candidate duplicates side-by-side and mark the ones to delete. Writes go through the Immich API.',
-    href: '/duplicates',
-    search: {id: []},
-  },
   {
     title: 'Nikon low-res review',
     description:

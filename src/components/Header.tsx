@@ -41,20 +41,6 @@ export default function Header() {
             Home
           </Link>
           <Link
-            to="/duplicates"
-            search={{id: []}}
-            className={linkBase}
-            style={{color: 'var(--text-muted)'}}
-            activeProps={{
-              style: {
-                color: 'var(--accent)',
-                background: 'var(--surface-2)',
-              },
-            }}
-          >
-            Duplicates
-          </Link>
-          <Link
             to="/review/nikon-low-res"
             className={linkBase}
             style={{color: 'var(--text-muted)'}}

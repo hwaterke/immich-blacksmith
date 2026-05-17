@@ -8,6 +8,7 @@ interface Props {
   sourceHasEmbedding: boolean
   similars: SimilarResult[]
   maxDistance: number
+  immichWebUrl: string
 }
 
 export function DuplicatesReview({
@@ -16,6 +17,7 @@ export function DuplicatesReview({
   sourceHasEmbedding,
   similars,
   maxDistance,
+  immichWebUrl,
 }: Props) {
   return (
     <main className="mx-auto w-full max-w-[1400px] px-4 py-6">
@@ -33,6 +35,7 @@ export function DuplicatesReview({
             error={source.error}
             hasEmbedding={sourceHasEmbedding}
             label="Source"
+            immichWebUrl={immichWebUrl}
           />
 
           {similars.length === 0 ? (
@@ -61,6 +64,7 @@ export function DuplicatesReview({
                 distance={r.distance}
                 reference={source.asset}
                 label={`Match ${i + 1}`}
+                immichWebUrl={immichWebUrl}
               />
             ))
           )}

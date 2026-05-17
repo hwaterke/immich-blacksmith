@@ -16,6 +16,7 @@ export interface DuplicatesData {
   source: AssetResult
   sourceHasEmbedding: boolean
   similars: SimilarResult[]
+  immichWebUrl: string
 }
 
 export const getNikonLowResList = createServerFn({method: 'GET'}).handler(
@@ -29,7 +30,7 @@ export const loadDuplicatesFor = createServerFn({method: 'GET'})
   .inputValidator((data: {assetId: string; maxDistance: number}) => data)
   .handler(async ({data}): Promise<DuplicatesData> => {
     const {findSimilarAssetIds} = await import('./assetQueries')
-    const {ensureImmichInit} = await import('./immich')
+    const {ensureImmichInit, getImmichWebUrl} = await import('./immich')
     const {getAssetInfo} = await import('@immich/sdk')
 
     const {sourceHasEmbedding, results: similars} = await findSimilarAssetIds(
@@ -38,6 +39,7 @@ export const loadDuplicatesFor = createServerFn({method: 'GET'})
     )
 
     ensureImmichInit()
+    const immichWebUrl = getImmichWebUrl()
     const loadAsset = async (id: string): Promise<AssetResult> => {
       try {
         const asset = await getAssetInfo({id})
@@ -61,5 +63,10 @@ export const loadDuplicatesFor = createServerFn({method: 'GET'})
       distance: s.distance,
     }))
 
-    return {source, sourceHasEmbedding, similars: similarResults}
+    return {
+      source,
+      sourceHasEmbedding,
+      similars: similarResults,
+      immichWebUrl,
+    }
   })

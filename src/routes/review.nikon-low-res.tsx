@@ -26,6 +26,7 @@ interface LoaderLoaded {
   source: AssetResult
   similars: SimilarResult[]
   maxDistance: number
+  immichWebUrl: string
 }
 
 type LoaderData = LoaderEmpty | LoaderLoaded
@@ -60,6 +61,7 @@ export const Route = createFileRoute('/review/nikon-low-res')({
       source: data.source,
       similars: data.similars,
       maxDistance: deps.maxDistance,
+      immichWebUrl: data.immichWebUrl,
     }
   },
   component: ReviewNikonLowResPage,
@@ -146,7 +148,8 @@ function ReviewNikonLowResPage() {
     )
   }
 
-  const {index, source, similars, sourcePath, sourceHasEmbedding} = data
+  const {index, source, similars, sourcePath, sourceHasEmbedding, immichWebUrl} =
+    data
   const hasPrev = index > 0
   const hasNext = index < data.total - 1
   const progress = ((index + 1) / data.total) * 100
@@ -223,11 +226,13 @@ function ReviewNikonLowResPage() {
 
   return (
     <DuplicatesReview
+      key={source.id}
       header={header}
       source={source}
       sourceHasEmbedding={sourceHasEmbedding}
       similars={similars}
       maxDistance={data.maxDistance}
+      immichWebUrl={immichWebUrl}
     />
   )
 }

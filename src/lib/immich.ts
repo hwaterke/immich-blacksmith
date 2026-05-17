@@ -18,3 +18,11 @@ export function ensureImmichInit() {
   init({baseUrl, apiKey})
   initialized = true
 }
+
+export function getImmichWebUrl(): string {
+  const baseUrl = process.env.IMMICH_URL
+  if (!baseUrl) {
+    throw new Error('IMMICH_URL environment variable is not set')
+  }
+  return baseUrl.replace(/\/+$/, '').replace(/\/api$/, '')
+}

@@ -9,8 +9,8 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SanityCheckRouteImport } from './routes/sanity-check'
 import { Route as PingRouteImport } from './routes/ping'
-import { Route as DuplicatesRouteImport } from './routes/duplicates'
 import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewNikonLowResRouteImport } from './routes/review.nikon-low-res'
@@ -21,14 +21,14 @@ import { Route as ApiThumbnailIdRouteImport } from './routes/api.thumbnail.$id'
 import { Route as ApiSimilarIdRouteImport } from './routes/api.similar.$id'
 import { Route as ApiTryIdId2RouteImport } from './routes/api.try.$id.$id2'
 
+const SanityCheckRoute = SanityCheckRouteImport.update({
+  id: '/sanity-check',
+  path: '/sanity-check',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PingRoute = PingRouteImport.update({
   id: '/ping',
   path: '/ping',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DuplicatesRoute = DuplicatesRouteImport.update({
-  id: '/duplicates',
-  path: '/duplicates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AssetsRoute = AssetsRouteImport.update({
@@ -80,8 +80,8 @@ const ApiTryIdId2Route = ApiTryIdId2RouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/assets': typeof AssetsRoute
-  '/duplicates': typeof DuplicatesRoute
   '/ping': typeof PingRoute
+  '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
@@ -93,8 +93,8 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/assets': typeof AssetsRoute
-  '/duplicates': typeof DuplicatesRoute
   '/ping': typeof PingRoute
+  '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
@@ -107,8 +107,8 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/assets': typeof AssetsRoute
-  '/duplicates': typeof DuplicatesRoute
   '/ping': typeof PingRoute
+  '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
@@ -122,8 +122,8 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/assets'
-    | '/duplicates'
     | '/ping'
+    | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
     | '/review/nikon-low-res'
@@ -135,8 +135,8 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/assets'
-    | '/duplicates'
     | '/ping'
+    | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
     | '/review/nikon-low-res'
@@ -148,8 +148,8 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/assets'
-    | '/duplicates'
     | '/ping'
+    | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
     | '/review/nikon-low-res'
@@ -162,8 +162,8 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AssetsRoute: typeof AssetsRoute
-  DuplicatesRoute: typeof DuplicatesRoute
   PingRoute: typeof PingRoute
+  SanityCheckRoute: typeof SanityCheckRoute
   ApiMarkForDeletionRoute: typeof ApiMarkForDeletionRoute
   ApiNikonLowResRoute: typeof ApiNikonLowResRoute
   ReviewNikonLowResRoute: typeof ReviewNikonLowResRoute
@@ -175,18 +175,18 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/sanity-check': {
+      id: '/sanity-check'
+      path: '/sanity-check'
+      fullPath: '/sanity-check'
+      preLoaderRoute: typeof SanityCheckRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/ping': {
       id: '/ping'
       path: '/ping'
       fullPath: '/ping'
       preLoaderRoute: typeof PingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/duplicates': {
-      id: '/duplicates'
-      path: '/duplicates'
-      fullPath: '/duplicates'
-      preLoaderRoute: typeof DuplicatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/assets': {
@@ -258,8 +258,8 @@ declare module '@tanstack/react-router' {
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AssetsRoute: AssetsRoute,
-  DuplicatesRoute: DuplicatesRoute,
   PingRoute: PingRoute,
+  SanityCheckRoute: SanityCheckRoute,
   ApiMarkForDeletionRoute: ApiMarkForDeletionRoute,
   ApiNikonLowResRoute: ApiNikonLowResRoute,
   ReviewNikonLowResRoute: ReviewNikonLowResRoute,

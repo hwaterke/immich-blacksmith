@@ -63,11 +63,13 @@ function ReviewDuplicatesPage() {
 
   return (
     <DuplicatesReview
+      key={data.assetId}
       header={header}
       source={data.source}
       sourceHasEmbedding={data.sourceHasEmbedding}
       similars={data.similars}
       maxDistance={data.maxDistance}
+      immichWebUrl={data.immichWebUrl}
     />
   )
 }

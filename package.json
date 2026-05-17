@@ -27,6 +27,7 @@
     "lint": "eslint",
     "format": "prettier --write .",
     "check": "prettier --check .",
+    "typecheck": "tsc --noEmit",
     "db:introspect": "kysely-codegen --out-file=src/db.d.ts --dialect=postgres --type-only-imports"
   },
   "dependencies": {
