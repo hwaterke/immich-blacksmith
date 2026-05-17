@@ -284,6 +284,7 @@ export function DuplicateAssetCard({
   }
 
   const exif = asset.exifInfo
+
   const refExif = reference?.exifInfo
 
   const taken = exif?.dateTimeOriginal ?? asset.localDateTime
@@ -437,44 +438,6 @@ export function DuplicateAssetCard({
           differs={diff(formatTimePart(taken), formatTimePart(refTaken))}
         >
           {formatTimePart(taken)}
-        </Row>
-
-        <Row
-          label="Uploaded date"
-          differs={diff(
-            formatDatePart(asset.fileCreatedAt),
-            formatDatePart(reference?.fileCreatedAt),
-          )}
-        >
-          {formatDatePart(asset.fileCreatedAt)}
-        </Row>
-        <Row
-          label="Uploaded time"
-          differs={diff(
-            formatTimePart(asset.fileCreatedAt),
-            formatTimePart(reference?.fileCreatedAt),
-          )}
-        >
-          {formatTimePart(asset.fileCreatedAt)}
-        </Row>
-
-        <Row
-          label="Modified date"
-          differs={diff(
-            formatDatePart(asset.fileModifiedAt),
-            formatDatePart(reference?.fileModifiedAt),
-          )}
-        >
-          {formatDatePart(asset.fileModifiedAt)}
-        </Row>
-        <Row
-          label="Modified time"
-          differs={diff(
-            formatTimePart(asset.fileModifiedAt),
-            formatTimePart(reference?.fileModifiedAt),
-          )}
-        >
-          {formatTimePart(asset.fileModifiedAt)}
         </Row>
 
         <Row
