@@ -1,63 +1,66 @@
-Welcome to your new TanStack Start app!
+# Immich Blacksmith
 
-# Getting Started
+_A sidecar toolkit for extending [Immich](https://immich.app)._
 
-To run this application:
+Blacksmith is an unofficial companion app for self-hosted Immich. It runs next
+to your Immich stack and hosts curation workflows that aren't (yet) in the main
+app — reading from Immich's database for fast browsing and pushing changes back
+through the official REST API.
+
+> **Status:** v0 — useful but small. The current toolset is intentionally
+> minimal; more tools will land as the need comes up. Issues and ideas welcome.
+
+## Features
+
+- **Duplicate review** — compare candidate duplicate assets side-by-side and
+  mark the ones to delete.
+- **Nikon low-resolution review** — surface low-resolution Nikon assets (based
+  on EXIF metadata) so you can re-import the originals or clean them out.
+
+## How it works
+
+Blacksmith connects to two surfaces of your existing Immich install:
+
+- **Read path** — direct `SELECT` queries against Immich's PostgreSQL database
+  via [Kysely](https://kysely.dev).
+- **Write path** — every mutation (e.g. marking an asset for deletion) goes
+  through Immich's official REST API using an API key, so nothing bypasses
+  Immich's own logic.
+
+No data leaves your infrastructure. Blacksmith is not affiliated with the
+Immich project.
+
+## Requirements
+
+- A running [Immich](https://immich.app) instance
+- Network access to Immich's PostgreSQL database
+- An Immich API key (Account Settings → API Keys)
+- Docker (recommended) or Node.js 24 for a local checkout
+
+## Quick start — Docker Compose
+
+The included `Dockerfile` produces a self-contained image (~150–250 MB) that
+runs on top of `node:24-alpine`.
+
+### 1. Build the image
 
 ```bash
-npm install
-npm run dev
+docker build -t immich-blacksmith:latest .
 ```
 
-# Building For Production
+The build is fully self-contained — dependencies and `pnpm build` run inside
+the builder stage, so no local `node_modules` or `.output` is required.
 
-To build this application for production:
+### 2. Add a service to your Immich `docker-compose.yml`
 
-```bash
-npm run build
-```
-
-## Deploy with Nitro
-
-This project uses Nitro as a generic server adapter, so it can run on any Node-compatible host.
-
-```bash
-npm run build
-node dist/server/index.mjs
-```
-
-The build output is a self-contained Node server. To deploy, push the `dist/` directory to your host (Render, Fly.io, your own VPS, etc.) and run the server command above.
-
-For host-specific presets (Vercel, Netlify, Cloudflare, AWS Lambda, etc.) and tuning, see https://v3.nitro.build/deploy.
-
-## Docker Deployment
-
-The included `Dockerfile` produces a self-contained image that can run next to a
-self-hosted [Immich](https://immich.app) stack. The runtime image only contains
-the Nitro server bundle (`.output/`) on top of `node:22-alpine`, so it stays
-small (~150–250 MB).
-
-### Build the image
-
-```bash
-docker build -t immich-plus:latest .
-```
-
-The build is fully self-contained — it installs dependencies and runs
-`npm run build` inside the builder stage, so no local `node_modules` or
-`.output` is required.
-
-### Run alongside Immich
-
-Add the following service to the existing Immich `docker-compose.yml` (the one
-that already defines `immich-server`, `database`, `redis`, …):
+Drop this next to the existing `immich-server`, `database`, `redis`… services:
 
 ```yaml
-immich-plus:
-  container_name: immich_plus
-  image: immich-plus:latest
+immich-blacksmith:
+  container_name: immich_blacksmith
+  image: immich-blacksmith:latest
   # Or build from a local checkout instead of pulling the image:
-  # build: ./immich-plus
+  # build: ./immich-blacksmith
   environment:
     DB_HOST: database
     DB_PORT: 5432
@@ -76,30 +79,43 @@ immich-plus:
 
 Notes:
 
-- `DB_DATABASE_NAME`, `DB_USERNAME`, `DB_PASSWORD` are already defined in
-  Immich's `.env` file next to its `docker-compose.yml`. Reuse them as-is.
-- `IMMICH_API_KEY` must be generated in Immich (Account Settings → API Keys)
-  and added to the same `.env`.
-- Because the service runs in the same compose file, it joins Immich's default
-  network and can reach `database` and `immich-server` by service name — no
-  extra `networks:` entry needed.
-- Host port `3001` is used to avoid clashing with Immich's web UI on `2283`.
-  Change it to whatever you prefer.
+- `DB_DATABASE_NAME`, `DB_USERNAME`, `DB_PASSWORD` are already in Immich's
+  `.env`. Reuse them as-is.
+- `IMMICH_API_KEY` must be generated in Immich and added to the same `.env`.
+- The service joins Immich's default network, so it reaches `database` and
+  `immich-server` by service name — no extra `networks:` entry needed.
+- Host port `3001` avoids clashing with Immich's web UI on `2283`. Change it
+  to whatever you prefer.
 
-Bring it up with:
+### 3. Start it
 
 ```bash
-docker compose up -d immich-plus
+docker compose up -d immich-blacksmith
 ```
 
 Then browse `http://<host>:3001`.
 
-### Optional: use a read-only PostgreSQL user
+## Configuration
 
-`immich-plus` only ever runs `SELECT` queries against Immich's database (all
-writes go through the Immich HTTP API using `IMMICH_API_KEY`). If you'd rather
-not hand the container Immich's full DB credentials, create a dedicated
-read-only role.
+All configuration is via environment variables.
+
+| Variable         | Description                                                                 |
+| ---------------- | --------------------------------------------------------------------------- |
+| `IMMICH_URL`     | Base URL of Immich's REST API, e.g. `http://immich-server:2283/api`.        |
+| `IMMICH_API_KEY` | API key generated in Immich (Account Settings → API Keys).                  |
+| `DB_HOST`        | Hostname of Immich's PostgreSQL server.                                     |
+| `DB_PORT`        | PostgreSQL port (default `5432`).                                           |
+| `DB_NAME`        | Immich database name.                                                       |
+| `DB_USER`        | PostgreSQL user. A read-only role is supported and recommended (see below). |
+| `DB_PASSWORD`    | PostgreSQL password for the user above.                                     |
+
+See [`.env.example`](.env.example) for a template.
+
+## Optional: dedicated read-only PostgreSQL user
+
+Blacksmith only ever runs `SELECT` queries against Immich's database (all writes
+go through the Immich HTTP API). If you'd rather not hand the container Immich's
+full DB credentials, create a dedicated read-only role.
 
 Open a `psql` shell inside the Immich database container:
 
@@ -127,3 +143,42 @@ DB_PASSWORD: choose-a-password
 
 Write workflows (e.g. marking duplicates for deletion) keep working because
 they go through Immich's REST API, not direct SQL.
+
+## Local development
+
+Blacksmith is a [TanStack Start](https://tanstack.com/start) app using
+[Nitro](https://nitro.build) for the server runtime. It uses `pnpm`.
+
+```bash
+pnpm install
+cp .env.example .env       # then fill in your values
+pnpm dev                    # http://localhost:3000
+```
+
+Other scripts:
+
+```bash
+pnpm build                  # production bundle into .output/
+pnpm lint                   # eslint
+pnpm check                  # prettier --check
+pnpm format                 # prettier --write
+pnpm test                   # vitest
+```
+
+If your Immich schema is newer than the bundled type definitions, regenerate
+them:
+
+```bash
+pnpm db:introspect
+```
+
+## License
+
+[MIT](LICENSE).
+
+## Acknowledgements
+
+Blacksmith only exists because [Immich](https://immich.app) is a great
+self-hosted photo platform. Huge thanks to the
+[Immich team and contributors](https://github.com/immich-app/immich).
+This project is independent of and not endorsed by the Immich project.

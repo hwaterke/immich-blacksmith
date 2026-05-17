@@ -1,6 +1,20 @@
 {
-  "name": "immich-plus",
+  "name": "immich-blacksmith",
+  "version": "0.1.0",
   "private": true,
+  "description": "A sidecar toolkit for extending Immich.",
+  "license": "MIT",
+  "author": "hwaterke",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hwaterke/immich-blacksmith"
+  },
+  "keywords": [
+    "immich",
+    "self-hosted",
+    "photo-management",
+    "sidecar"
+  ],
   "type": "module",
   "imports": {
     "#/*": "./src/*"
@@ -19,6 +33,7 @@
     "@immich/sdk": "^2.7.5",
     "@tailwindcss/vite": "^4.1.18",
     "@tanstack/react-devtools": "latest",
+    "@tanstack/react-query": "latest",
     "@tanstack/react-router": "latest",
     "@tanstack/react-router-devtools": "latest",
     "@tanstack/react-router-ssr-query": "latest",

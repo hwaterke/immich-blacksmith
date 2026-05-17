@@ -22,7 +22,7 @@ export default function Header() {
             className="h-2.5 w-2.5 rounded-full"
             style={{background: 'var(--accent)'}}
           />
-          immich-plus
+          Immich Blacksmith
         </Link>
 
         <div className="ml-auto flex items-center gap-1">
@@ -39,6 +39,20 @@ export default function Header() {
             activeOptions={{exact: true}}
           >
             Home
+          </Link>
+          <Link
+            to="/duplicates"
+            search={{id: []}}
+            className={linkBase}
+            style={{color: 'var(--text-muted)'}}
+            activeProps={{
+              style: {
+                color: 'var(--accent)',
+                background: 'var(--surface-2)',
+              },
+            }}
+          >
+            Duplicates
           </Link>
           <Link
             to="/review/nikon-low-res"
