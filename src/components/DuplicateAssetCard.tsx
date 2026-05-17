@@ -14,11 +14,13 @@ import {cn} from '../lib/utils'
 
 interface Props {
   id: string
+  originalPath?: string
   asset?: AssetResponseDto
   error?: string
   hasEmbedding?: boolean
   distance?: number
   reference?: AssetResponseDto
+  label: string
 }
 
 function formatBytes(bytes: number | null | undefined): string {
@@ -72,12 +74,6 @@ function formatCamera(
   return v || '—'
 }
 
-function highlightCls(differs: boolean): string {
-  return differs
-    ? 'rounded bg-yellow-200/70 px-1 py-0.5 dark:bg-yellow-400/25'
-    : ''
-}
-
 function CopyText({
   value,
   className,
@@ -104,17 +100,21 @@ function CopyText({
       onClick={handleCopy}
       title={title ?? 'Click to copy'}
       className={cn(
-        'group flex w-full items-start gap-1 text-left transition',
+        'group flex w-full items-start gap-1.5 text-left transition',
         className,
       )}
     >
       <span className="min-w-0 flex-1 break-all">{value}</span>
       {copied ? (
-        <Check size={11} className="mt-0.5 shrink-0 text-emerald-600" />
+        <Check
+          size={13}
+          className="mt-0.5 shrink-0"
+          style={{color: 'var(--success)'}}
+        />
       ) : (
         <Copy
-          size={11}
-          className="mt-0.5 shrink-0 opacity-40 transition group-hover:opacity-100"
+          size={13}
+          className="mt-0.5 shrink-0 opacity-50 transition group-hover:opacity-100"
         />
       )}
     </button>
@@ -122,24 +122,52 @@ function CopyText({
 }
 
 function EmbeddingBadge({present}: {present: boolean}) {
+  const bg = present ? 'rgba(63, 185, 80, 0.16)' : 'rgba(248, 81, 73, 0.16)'
+  const color = present ? 'var(--success)' : 'var(--danger)'
+  const border = present ? 'rgba(63, 185, 80, 0.4)' : 'rgba(248, 81, 73, 0.4)'
   return (
     <span
-      className={cn(
-        'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide',
-        present
-          ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-300'
-          : 'bg-red-100 text-red-700 dark:bg-red-500/20 dark:text-red-300',
-      )}
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+      style={{background: bg, color, borderColor: border}}
     >
-      {present ? <ShieldCheck size={11} /> : <ShieldAlert size={11} />}
+      {present ? <ShieldCheck size={12} /> : <ShieldAlert size={12} />}
       {present ? 'Embedding' : 'No embedding'}
     </span>
   )
 }
 
+function distanceBand(distance: number) {
+  if (distance <= 0.005)
+    return {
+      bg: 'rgba(63, 185, 80, 0.16)',
+      color: 'var(--success)',
+      border: 'rgba(63, 185, 80, 0.4)',
+    }
+  if (distance <= 0.015)
+    return {
+      bg: 'rgba(210, 153, 34, 0.18)',
+      color: 'var(--warning)',
+      border: 'rgba(210, 153, 34, 0.4)',
+    }
+  return {
+    bg: 'rgba(248, 81, 73, 0.16)',
+    color: 'var(--danger)',
+    border: 'rgba(248, 81, 73, 0.4)',
+  }
+}
+
 function DistanceBadge({distance}: {distance: number}) {
+  const band = distanceBand(distance)
   return (
-    <span className="inline-flex items-center gap-1 rounded-full bg-black/5 px-2 py-0.5 font-mono text-[10px] text-[var(--sea-ink)] dark:bg-white/10">
+    <span
+      className="inline-flex items-center gap-1 rounded-full border px-2 py-0.5 font-mono text-[11px] font-semibold"
+      style={{
+        background: band.bg,
+        color: band.color,
+        borderColor: band.border,
+      }}
+      title={`Cosine distance to source: ${distance.toFixed(6)}`}
+    >
       d = {distance.toFixed(4)}
     </span>
   )
@@ -154,11 +182,20 @@ interface RowProps {
 function Row({label, children, differs}: RowProps) {
   return (
     <>
-      <dt className="font-medium">{label}</dt>
-      <dd>
-        <span className={cn('inline-block', highlightCls(!!differs))}>
-          {children}
-        </span>
+      <dt className="py-1 pr-3 text-sm" style={{color: 'var(--text-faint)'}}>
+        {label}
+      </dt>
+      <dd
+        className="py-1 pl-2 text-sm"
+        style={{
+          color: differs ? 'var(--diff-fg)' : 'var(--text)',
+          borderLeft: differs
+            ? '2px solid var(--diff-fg)'
+            : '2px solid transparent',
+          background: differs ? 'var(--diff-bg)' : 'transparent',
+        }}
+      >
+        {children}
       </dd>
     </>
   )
@@ -166,34 +203,82 @@ function Row({label, children, differs}: RowProps) {
 
 export function DuplicateAssetCard({
   id,
+  originalPath,
   asset,
   error,
   hasEmbedding,
   distance,
   reference,
+  label,
 }: Props) {
   const [marked, setMarked] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState<string | null>(null)
 
+  const cardStyle = {
+    background: 'var(--surface)',
+    borderColor: marked ? 'var(--danger)' : 'var(--border)',
+    borderWidth: marked ? '2px' : '1px',
+  }
+
   if (!asset) {
     return (
-      <div className="island-shell flex w-[320px] shrink-0 flex-col rounded-2xl border border-red-300/60 p-4">
-        <p className="island-kicker mb-2 text-red-600">Asset unavailable</p>
+      <div
+        className="flex w-[360px] shrink-0 snap-start flex-col rounded-lg border p-4"
+        style={{
+          background: 'var(--surface)',
+          borderColor: 'var(--danger)',
+        }}
+      >
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <span
+            className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+            style={{
+              background: 'var(--surface-2)',
+              color: 'var(--text-muted)',
+            }}
+          >
+            {label}
+          </span>
+          <span className="text-[11px] font-semibold uppercase tracking-wide text-(--danger)">
+            Asset unavailable
+          </span>
+        </div>
         {hasEmbedding != null || distance != null ? (
-          <div className="mb-2 flex flex-wrap items-center gap-1.5">
+          <div className="mb-3 flex flex-wrap items-center gap-1.5">
             {hasEmbedding != null ? (
               <EmbeddingBadge present={hasEmbedding} />
             ) : null}
             {distance != null ? <DistanceBadge distance={distance} /> : null}
           </div>
         ) : null}
+
+        <p className="kicker mb-1" style={{color: 'var(--text-faint)'}}>
+          Asset ID
+        </p>
         <CopyText
           value={id}
           title="Click to copy asset ID"
-          className="break-all font-mono text-[10px] text-[var(--sea-ink-soft)]"
+          className="break-all font-mono text-xs"
         />
-        {error ? <p className="mt-2 text-xs text-red-600">{error}</p> : null}
+
+        {originalPath ? (
+          <>
+            <p className="kicker mb-1" style={{color: 'var(--text-faint)'}}>
+              Path
+            </p>
+            <CopyText
+              value={originalPath}
+              title="Click to copy path"
+              className="break-all font-mono text-xs"
+            />
+          </>
+        ) : null}
+        {error ? (
+          <p className="mt-3 text-sm" style={{color: 'var(--danger)'}}>
+            {error}
+          </p>
+        ) : null}
       </div>
     )
   }
@@ -261,62 +346,75 @@ export function DuplicateAssetCard({
 
   return (
     <div
-      className={cn(
-        'island-shell flex w-[320px] shrink-0 flex-col rounded-2xl p-4 transition',
-        marked
-          ? 'border-2 border-red-500 bg-red-50/40 opacity-80'
-          : 'border border-transparent',
-      )}
+      className="flex w-[360px] shrink-0 snap-start flex-col rounded-lg border transition"
+      style={cardStyle}
     >
+      <div className="flex items-center justify-between gap-2 px-4 pt-3">
+        <span
+          className="inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide"
+          style={{background: 'var(--surface-2)', color: 'var(--text-muted)'}}
+        >
+          {label}
+        </span>
+        <div className="flex items-center gap-1.5">
+          {distance != null ? <DistanceBadge distance={distance} /> : null}
+          {hasEmbedding != null ? (
+            <EmbeddingBadge present={hasEmbedding} />
+          ) : null}
+        </div>
+      </div>
+
       <a
         href={`/api/thumbnail/${asset.id}`}
         target="_blank"
         rel="noopener noreferrer"
-        className="block overflow-hidden rounded-xl bg-black/5"
+        className="relative mx-4 mt-3 block overflow-hidden rounded-md"
+        style={{background: 'var(--surface-2)'}}
+        title="Open full thumbnail in new tab"
       >
         <img
           src={`/api/thumbnail/${asset.id}`}
           alt={asset.originalFileName}
-          className="h-48 w-full object-cover"
+          className="h-64 w-full object-cover transition"
           loading="lazy"
+          style={{opacity: marked ? 0.45 : 1}}
         />
+        {marked ? (
+          <div
+            className="absolute inset-0 flex items-center justify-center"
+            style={{background: 'rgba(248, 81, 73, 0.15)'}}
+          >
+            <span
+              className="rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+              style={{background: 'var(--danger)', color: '#fff'}}
+            >
+              Marked for deletion
+            </span>
+          </div>
+        ) : null}
       </a>
 
       <h3
-        className="mt-3 truncate text-sm font-semibold text-[var(--sea-ink)]"
+        className="mt-3 px-4 text-sm font-semibold"
+        style={{color: 'var(--text)'}}
         title={asset.originalFileName}
       >
         <span
-          className={cn(
-            'inline-block max-w-full truncate align-bottom',
-            highlightCls(
-              diff(asset.originalFileName, reference?.originalFileName),
-            ),
-          )}
+          className="block truncate"
+          style={{
+            color: diff(asset.originalFileName, reference?.originalFileName)
+              ? 'var(--diff-fg)'
+              : 'var(--text)',
+          }}
         >
           {asset.originalFileName}
         </span>
       </h3>
 
-      {hasEmbedding != null || distance != null ? (
-        <div className="mt-2 flex flex-wrap items-center gap-1.5">
-          {hasEmbedding != null ? (
-            <EmbeddingBadge present={hasEmbedding} />
-          ) : null}
-          {distance != null ? <DistanceBadge distance={distance} /> : null}
-        </div>
-      ) : null}
-
-      <div className="mt-2">
-        <p className="island-kicker mb-0.5 text-[9px]">Asset ID</p>
-        <CopyText
-          value={id}
-          title="Click to copy asset ID"
-          className="break-all font-mono text-[10px] text-[var(--sea-ink-soft)]"
-        />
-      </div>
-
-      <dl className="mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1.5 text-xs text-[var(--sea-ink-soft)]">
+      <dl
+        className="mt-3 grid grid-cols-[max-content_1fr] gap-y-0.5 px-4"
+        style={{color: 'var(--text)'}}
+      >
         <Row
           label="Size"
           differs={diff(exif?.fileSizeInByte, refExif?.fileSizeInByte)}
@@ -381,8 +479,8 @@ export function DuplicateAssetCard({
 
         <Row
           label={
-            <span className="flex items-center gap-1">
-              <Camera size={12} /> Camera
+            <span className="flex items-center gap-1.5">
+              <Camera size={13} /> Camera
             </span>
           }
           differs={diff(camera, refCamera)}
@@ -392,8 +490,8 @@ export function DuplicateAssetCard({
 
         <Row
           label={
-            <span className="flex items-center gap-1">
-              <MapPin size={12} /> Location
+            <span className="flex items-center gap-1.5">
+              <MapPin size={13} /> Location
             </span>
           }
           differs={diff(location, refLocation)}
@@ -402,37 +500,55 @@ export function DuplicateAssetCard({
         </Row>
       </dl>
 
-      <div className="mt-3">
-        <p className="island-kicker mb-0.5 text-[9px]">Path</p>
-        <CopyText
-          value={asset.originalPath}
-          title="Click to copy path"
-          className="break-all rounded-md bg-black/5 p-2 font-mono text-[10px] text-[var(--sea-ink-soft)]"
-        />
+      <div className="mt-2 space-y-2 p-4">
+        <div>
+          <p className="kicker mb-1">Asset ID</p>
+          <CopyText
+            value={id}
+            title="Click to copy asset ID"
+            className="break-all rounded-md p-2 font-mono text-xs"
+          />
+        </div>
+        <div>
+          <p className="kicker mb-1">Path</p>
+          <CopyText
+            value={asset.originalPath}
+            title="Click to copy path"
+            className="break-all rounded-md p-2 font-mono text-xs"
+          />
+        </div>
       </div>
 
-      <button
-        type="button"
-        onClick={handleMark}
-        disabled={submitting || marked}
-        className={cn(
-          'mt-3 flex items-center justify-center gap-2 rounded-full px-4 py-2 text-sm font-semibold transition',
-          marked
-            ? 'cursor-not-allowed bg-red-200 text-red-900'
-            : 'bg-red-500 text-white hover:bg-red-600 disabled:opacity-60',
-        )}
-      >
-        <Trash2 size={14} />
-        {marked
-          ? 'Marked for deletion'
-          : submitting
-            ? 'Marking…'
-            : 'Mark for deletion'}
-      </button>
+      <div className="mt-4 px-4 pb-4">
+        <button
+          type="button"
+          onClick={handleMark}
+          disabled={submitting || marked}
+          className={cn(
+            'flex w-full items-center justify-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition',
+          )}
+          style={{
+            background: marked ? 'var(--surface-2)' : 'var(--danger)',
+            color: marked ? 'var(--text-faint)' : '#fff',
+            cursor: marked || submitting ? 'not-allowed' : 'pointer',
+            textDecoration: marked ? 'line-through' : 'none',
+            opacity: submitting ? 0.7 : 1,
+          }}
+        >
+          <Trash2 size={14} />
+          {marked
+            ? 'Marked for deletion'
+            : submitting
+              ? 'Marking…'
+              : 'Mark for deletion'}
+        </button>
 
-      {submitError ? (
-        <p className="mt-2 text-xs text-red-600">{submitError}</p>
-      ) : null}
+        {submitError ? (
+          <p className="mt-2 text-sm" style={{color: 'var(--danger)'}}>
+            {submitError}
+          </p>
+        ) : null}
+      </div>
     </div>
   )
 }

@@ -8,18 +8,18 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import {Route as rootRouteImport} from './routes/__root'
-import {Route as PingRouteImport} from './routes/ping'
-import {Route as DuplicatesRouteImport} from './routes/duplicates'
-import {Route as AssetsRouteImport} from './routes/assets'
-import {Route as IndexRouteImport} from './routes/index'
-import {Route as ReviewNikonLowResRouteImport} from './routes/review.nikon-low-res'
-import {Route as ApiNikonLowResRouteImport} from './routes/api.nikon-low-res'
-import {Route as ApiMarkForDeletionRouteImport} from './routes/api.mark-for-deletion'
-import {Route as ReviewDuplicatesAssetIdRouteImport} from './routes/review.duplicates.$assetId'
-import {Route as ApiThumbnailIdRouteImport} from './routes/api.thumbnail.$id'
-import {Route as ApiSimilarIdRouteImport} from './routes/api.similar.$id'
-import {Route as ApiTryIdId2RouteImport} from './routes/api.try.$id.$id2'
+import { Route as rootRouteImport } from './routes/__root'
+import { Route as PingRouteImport } from './routes/ping'
+import { Route as DuplicatesRouteImport } from './routes/duplicates'
+import { Route as AssetsRouteImport } from './routes/assets'
+import { Route as IndexRouteImport } from './routes/index'
+import { Route as ReviewNikonLowResRouteImport } from './routes/review.nikon-low-res'
+import { Route as ApiNikonLowResRouteImport } from './routes/api.nikon-low-res'
+import { Route as ApiMarkForDeletionRouteImport } from './routes/api.mark-for-deletion'
+import { Route as ReviewDuplicatesAssetIdRouteImport } from './routes/review.duplicates.$assetId'
+import { Route as ApiThumbnailIdRouteImport } from './routes/api.thumbnail.$id'
+import { Route as ApiSimilarIdRouteImport } from './routes/api.similar.$id'
+import { Route as ApiTryIdId2RouteImport } from './routes/api.try.$id.$id2'
 
 const PingRoute = PingRouteImport.update({
   id: '/ping',
@@ -272,8 +272,8 @@ export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
 
-import type {getRouter} from './router.tsx'
-import type {createStart} from '@tanstack/react-start'
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
 declare module '@tanstack/react-start' {
   interface Register {
     ssr: true

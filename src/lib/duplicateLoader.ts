@@ -3,6 +3,7 @@ import type {AssetResponseDto} from '@immich/sdk'
 
 export interface AssetResult {
   id: string
+  originalPath?: string
   asset?: AssetResponseDto
   error?: string
 }
@@ -55,6 +56,7 @@ export const loadDuplicatesFor = createServerFn({method: 'GET'})
     ])
 
     const similarResults: SimilarResult[] = similars.map((s, i) => ({
+      originalPath: s.originalPath,
       ...similarAssets[i],
       distance: s.distance,
     }))

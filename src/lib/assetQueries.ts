@@ -4,6 +4,7 @@ import {db} from '../db'
 
 export interface SimilarAssetResult {
   assetId: string
+  originalPath: string
   distance: number
 }
 
@@ -45,6 +46,7 @@ export async function findSimilarAssetIds(
           .innerJoin('smart_search', 'asset.id', 'smart_search.assetId')
           .select([
             'asset.id as assetId',
+            'asset.originalPath as originalPath',
             sql<number>`smart_search.embedding <=> ${source.embedding}`.as(
               'distance',
             ),

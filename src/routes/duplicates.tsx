@@ -1,5 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {getAssetInfo, type AssetResponseDto} from '@immich/sdk'
+import {getAssetInfo} from '@immich/sdk'
+import type {AssetResponseDto} from '@immich/sdk'
 import {z} from 'zod'
 import {ensureImmichInit} from '../lib/immich'
 import {DuplicateAssetCard} from '../components/DuplicateAssetCard'
@@ -48,13 +49,22 @@ function DuplicatesPage() {
 
   if (results.length === 0) {
     return (
-      <main className="page-wrap px-4 py-12">
-        <section className="island-shell rounded-2xl p-6 sm:p-8">
-          <p className="island-kicker mb-2">Duplicates</p>
-          <h1 className="display-title mb-3 text-3xl font-bold text-[var(--sea-ink)]">
+      <main className="mx-auto w-full max-w-[1400px] px-4 py-12">
+        <section
+          className="rounded-lg border p-6"
+          style={{
+            background: 'var(--surface)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <p className="kicker mb-2">Duplicates</p>
+          <h1
+            className="mb-3 text-2xl font-bold"
+            style={{color: 'var(--text)'}}
+          >
             No assets to review
           </h1>
-          <p className="m-0 text-base text-[var(--sea-ink-soft)]">
+          <p style={{color: 'var(--text-muted)'}}>
             Pass asset IDs as <code>?id=…</code> query parameters to compare
             them. Example: <code>/duplicates?id=abc&amp;id=def</code>
           </p>
@@ -64,22 +74,29 @@ function DuplicatesPage() {
   }
 
   return (
-    <main className="page-wrap px-4 py-8">
+    <main className="mx-auto w-full max-w-[1400px] px-4 py-6">
       <section className="mb-6">
-        <p className="island-kicker mb-2">Duplicates</p>
-        <h1 className="display-title text-3xl font-bold text-[var(--sea-ink)]">
+        <p className="kicker mb-1">Duplicates</p>
+        <h1
+          className="text-2xl font-bold tracking-tight"
+          style={{color: 'var(--text)'}}
+        >
           Reviewing {results.length} {results.length === 1 ? 'asset' : 'assets'}
         </h1>
       </section>
 
-      <div className="-mx-4 overflow-x-auto px-4 pb-4">
+      <div
+        className="-mx-4 overflow-x-auto px-4 pb-6"
+        style={{scrollSnapType: 'x mandatory'}}
+      >
         <div className="flex gap-4">
-          {results.map((r) => (
+          {results.map((r, i) => (
             <DuplicateAssetCard
               key={r.id}
               id={r.id}
               asset={r.asset}
               error={r.error}
+              label={`Asset ${i + 1}`}
             />
           ))}
         </div>

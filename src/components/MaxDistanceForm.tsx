@@ -23,7 +23,8 @@ export function MaxDistanceForm({value, onApply}: Props) {
     <form onSubmit={handleSubmit} className="flex items-center gap-2">
       <label
         htmlFor="max-distance"
-        className="island-kicker text-[10px] text-[var(--sea-ink-soft)]"
+        className="text-sm font-medium"
+        style={{color: 'var(--text-muted)'}}
       >
         Max distance
       </label>
@@ -34,11 +35,17 @@ export function MaxDistanceForm({value, onApply}: Props) {
         min="0"
         value={raw}
         onChange={(e) => setRaw(e.target.value)}
-        className="w-24 rounded-full border border-[var(--line)] bg-[var(--chip-bg)] px-3 py-1 font-mono text-xs text-[var(--sea-ink)]"
+        className="w-24 rounded-md border px-2 py-1 font-mono text-sm"
+        style={{
+          background: 'var(--surface-2)',
+          borderColor: 'var(--border)',
+          color: 'var(--text)',
+        }}
       />
       <button
         type="submit"
-        className="rounded-full bg-[var(--sea-ink)] px-3 py-1 text-xs font-semibold text-white transition hover:opacity-90"
+        className="rounded-md px-3 py-1 text-sm font-semibold transition hover:brightness-110"
+        style={{background: 'var(--accent)', color: 'var(--accent-fg)'}}
       >
         Apply
       </button>

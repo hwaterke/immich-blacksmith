@@ -1,6 +1,5 @@
 import type {ReactNode} from 'react'
 import {DuplicateAssetCard} from './DuplicateAssetCard'
-import {MaxDistanceForm} from './MaxDistanceForm'
 import type {AssetResult, SimilarResult} from '../lib/duplicateLoader'
 
 interface Props {
@@ -9,7 +8,6 @@ interface Props {
   sourceHasEmbedding: boolean
   similars: SimilarResult[]
   maxDistance: number
-  onApplyMaxDistance: (next: number) => void
 }
 
 export function DuplicatesReview({
@@ -18,49 +16,51 @@ export function DuplicatesReview({
   sourceHasEmbedding,
   similars,
   maxDistance,
-  onApplyMaxDistance,
 }: Props) {
   return (
-    <main className="page-wrap px-4 py-8">
-      <section className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        {header}
-      </section>
+    <main className="mx-auto w-full max-w-[1400px] px-4 py-6">
+      <section className="mb-6">{header}</section>
 
-      <section className="mb-4">
-        <MaxDistanceForm value={maxDistance} onApply={onApplyMaxDistance} />
-      </section>
-
-      <div className="-mx-4 overflow-x-auto px-4 pt-4 pb-4">
+      <div
+        className="-mx-4 overflow-x-auto px-4 pb-6"
+        style={{scrollSnapType: 'x mandatory'}}
+      >
         <div className="flex gap-4">
-          <div className="relative">
-            <span className="absolute -top-2.5 left-3 z-10 rounded-full bg-[var(--sea-ink)] px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-white shadow">
-              Source
-            </span>
-            <DuplicateAssetCard
-              id={source.id}
-              asset={source.asset}
-              error={source.error}
-              hasEmbedding={sourceHasEmbedding}
-            />
-          </div>
+          <DuplicateAssetCard
+            id={source.id}
+            originalPath={source.originalPath}
+            asset={source.asset}
+            error={source.error}
+            hasEmbedding={sourceHasEmbedding}
+            label="Source"
+          />
 
           {similars.length === 0 ? (
-            <div className="island-shell flex w-[320px] shrink-0 flex-col justify-center rounded-2xl p-4">
-              <p className="island-kicker mb-2">No similars</p>
-              <p className="text-sm text-[var(--sea-ink-soft)]">
+            <div
+              className="flex w-[360px] shrink-0 snap-start flex-col justify-center rounded-lg border p-6"
+              style={{
+                background: 'var(--surface)',
+                borderColor: 'var(--border)',
+              }}
+            >
+              <p className="kicker mb-2">No matches</p>
+              <p className="text-sm" style={{color: 'var(--text-muted)'}}>
                 No assets matched within the {maxDistance} distance threshold.
+                Try increasing it.
               </p>
             </div>
           ) : (
-            similars.map((r) => (
+            similars.map((r, i) => (
               <DuplicateAssetCard
                 key={r.id}
                 id={r.id}
+                originalPath={r.originalPath}
                 asset={r.asset}
                 error={r.error}
                 hasEmbedding={true}
                 distance={r.distance}
                 reference={source.asset}
+                label={`Match ${i + 1}`}
               />
             ))
           )}

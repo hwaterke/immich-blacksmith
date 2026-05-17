@@ -1,6 +1,7 @@
 import {createFileRoute, useNavigate} from '@tanstack/react-router'
 import {z} from 'zod'
 import {DuplicatesReview} from '../components/DuplicatesReview'
+import {MaxDistanceForm} from '../components/MaxDistanceForm'
 import {loadDuplicatesFor} from '../lib/duplicateLoader'
 import type {DuplicatesData} from '../lib/duplicateLoader'
 
@@ -31,14 +32,32 @@ function ReviewDuplicatesPage() {
   const filename = data.source.asset?.originalFileName
 
   const header = (
-    <div>
-      <p className="island-kicker mb-2">Review · duplicates</p>
-      <h1 className="display-title text-3xl font-bold text-[var(--sea-ink)]">
-        {filename ?? 'Asset'}
-      </h1>
-      <p className="mt-2 break-all font-mono text-xs text-[var(--sea-ink-soft)]">
-        {data.assetId}
-      </p>
+    <div className="flex flex-wrap items-start justify-between gap-4">
+      <div className="min-w-0">
+        <p className="kicker mb-1">Review · duplicates</p>
+        <h1
+          className="text-2xl font-bold tracking-tight"
+          style={{color: 'var(--text)'}}
+        >
+          {filename ?? 'Asset'}
+        </h1>
+        <p
+          className="mt-1 break-all font-mono text-xs"
+          style={{color: 'var(--text-faint)'}}
+        >
+          {data.assetId}
+        </p>
+      </div>
+      <MaxDistanceForm
+        value={data.maxDistance}
+        onApply={(next) =>
+          navigate({
+            to: '/review/duplicates/$assetId',
+            params: {assetId: data.assetId},
+            search: {maxDistance: next},
+          })
+        }
+      />
     </div>
   )
 
@@ -49,13 +68,6 @@ function ReviewDuplicatesPage() {
       sourceHasEmbedding={data.sourceHasEmbedding}
       similars={data.similars}
       maxDistance={data.maxDistance}
-      onApplyMaxDistance={(next) =>
-        navigate({
-          to: '/review/duplicates/$assetId',
-          params: {assetId: data.assetId},
-          search: {maxDistance: next},
-        })
-      }
     />
   )
 }

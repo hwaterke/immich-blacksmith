@@ -3,9 +3,9 @@ import {ChevronLeft, ChevronRight} from 'lucide-react'
 import {useEffect} from 'react'
 import {z} from 'zod'
 import {DuplicatesReview} from '../components/DuplicatesReview'
+import {MaxDistanceForm} from '../components/MaxDistanceForm'
 import type {AssetResult, SimilarResult} from '../lib/duplicateLoader'
 import {getNikonLowResList, loadDuplicatesFor} from '../lib/duplicateLoader'
-import {cn} from '../lib/utils'
 
 const SearchSchema = z.object({
   index: z.coerce.number().int().min(0).default(0).catch(0),
@@ -67,11 +67,18 @@ export const Route = createFileRoute('/review/nikon-low-res')({
 
 function ReviewNikonLowResPage() {
   const data = Route.useLoaderData()
+
+  console.log({
+    data,
+  })
+
   const navigate = Route.useNavigate()
   const requestedIndex = data.kind === 'loaded' ? data.requestedIndex : null
   const resolvedIndex = data.kind === 'loaded' ? data.index : null
   const maxDistance = data.kind === 'loaded' ? data.maxDistance : null
+  const total = data.kind === 'loaded' ? data.total : null
 
+  // Reconcile requested vs clamped index in URL
   useEffect(() => {
     if (requestedIndex == null || resolvedIndex == null || maxDistance == null)
       return
@@ -84,15 +91,54 @@ function ReviewNikonLowResPage() {
     }
   }, [requestedIndex, resolvedIndex, maxDistance, navigate])
 
+  // Arrow-key navigation
+  useEffect(() => {
+    if (resolvedIndex == null || maxDistance == null || total == null) return
+    function onKeyDown(e: KeyboardEvent) {
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      const t = e.target as HTMLElement | null
+      if (t) {
+        const tag = t.tagName
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return
+        if (t.isContentEditable) return
+      }
+      if (e.key === 'ArrowLeft' && resolvedIndex! > 0) {
+        e.preventDefault()
+        navigate({
+          to: '/review/nikon-low-res',
+          search: {index: resolvedIndex! - 1, maxDistance: maxDistance!},
+        })
+      } else if (e.key === 'ArrowRight' && resolvedIndex! < total! - 1) {
+        e.preventDefault()
+        navigate({
+          to: '/review/nikon-low-res',
+          search: {index: resolvedIndex! + 1, maxDistance: maxDistance!},
+        })
+      }
+    }
+    window.addEventListener('keydown', onKeyDown)
+    return () => window.removeEventListener('keydown', onKeyDown)
+  }, [resolvedIndex, maxDistance, total, navigate])
+
   if (data.kind === 'empty') {
     return (
-      <main className="page-wrap px-4 py-12">
-        <section className="island-shell rounded-2xl p-6 sm:p-8">
-          <p className="island-kicker mb-2">Review</p>
-          <h1 className="display-title mb-3 text-3xl font-bold text-[var(--sea-ink)]">
+      <main className="mx-auto w-full max-w-[1400px] px-4 py-12">
+        <section
+          className="rounded-lg border p-6"
+          style={{
+            background: 'var(--surface)',
+            borderColor: 'var(--border)',
+          }}
+        >
+          <p className="kicker mb-2">Review</p>
+          <h1
+            className="mb-3 text-2xl font-bold"
+            style={{color: 'var(--text)'}}
+          >
             No nikon-low-res assets to review
           </h1>
-          <p className="m-0 text-base text-[var(--sea-ink-soft)]">
+          <p style={{color: 'var(--text-muted)'}}>
             Nothing matched <code>to-sort/nikon-low-res</code>.
           </p>
         </section>
@@ -100,43 +146,79 @@ function ReviewNikonLowResPage() {
     )
   }
 
-  const {total, index, source, similars, sourcePath, sourceHasEmbedding} = data
+  const {index, source, similars, sourcePath, sourceHasEmbedding} = data
   const hasPrev = index > 0
-  const hasNext = index < total - 1
+  const hasNext = index < data.total - 1
+  const progress = ((index + 1) / data.total) * 100
 
   const header = (
-    <>
-      <div>
-        <p className="island-kicker mb-2">Review · nikon-low-res</p>
-        <h1 className="display-title text-3xl font-bold text-[var(--sea-ink)]">
-          {index + 1} of {total}
-        </h1>
-        <p
-          className="mt-2 break-all font-mono text-xs text-[var(--sea-ink-soft)]"
-          title={sourcePath}
-        >
-          {sourcePath}
-        </p>
+    <div>
+      <div
+        className="mb-4 h-1 w-full overflow-hidden rounded-full"
+        style={{background: 'var(--surface-2)'}}
+        aria-label={`Progress: ${index + 1} of ${data.total}`}
+      >
+        <div
+          className="h-full rounded-full transition-all"
+          style={{width: `${progress}%`, background: 'var(--accent)'}}
+        />
       </div>
 
-      <nav className="flex items-center gap-2">
-        <NavButton
-          to={index - 1}
-          maxDistance={data.maxDistance}
-          disabled={!hasPrev}
-          label="Previous"
-          icon={<ChevronLeft size={16} />}
-        />
-        <NavButton
-          to={index + 1}
-          maxDistance={data.maxDistance}
-          disabled={!hasNext}
-          label="Next"
-          icon={<ChevronRight size={16} />}
-          iconRight
-        />
-      </nav>
-    </>
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div className="min-w-0">
+          <p className="kicker mb-1">Review · nikon-low-res</p>
+          <h1
+            className="text-2xl font-bold tracking-tight"
+            style={{color: 'var(--text)'}}
+          >
+            {index + 1}{' '}
+            <span style={{color: 'var(--text-faint)'}}>of {data.total}</span>
+          </h1>
+          <p
+            className="mt-1 break-all font-mono text-xs"
+            style={{color: 'var(--text-faint)'}}
+            title={sourcePath}
+          >
+            {sourcePath}
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <MaxDistanceForm
+            value={data.maxDistance}
+            onApply={(next) =>
+              navigate({
+                to: '/review/nikon-low-res',
+                search: {index, maxDistance: next},
+              })
+            }
+          />
+          <nav
+            className="flex items-center gap-1.5"
+            aria-label="Review navigation"
+          >
+            <NavButton
+              to={index - 1}
+              maxDistance={data.maxDistance}
+              disabled={!hasPrev}
+              label="Previous"
+              icon={<ChevronLeft size={16} />}
+            />
+            <NavButton
+              to={index + 1}
+              maxDistance={data.maxDistance}
+              disabled={!hasNext}
+              label="Next"
+              icon={<ChevronRight size={16} />}
+              iconRight
+            />
+          </nav>
+        </div>
+      </div>
+      <p className="mt-2 text-xs" style={{color: 'var(--text-faint)'}}>
+        Tip: use ← / → arrow keys to navigate.
+      </p>
+    </div>
   )
 
   return (
@@ -146,12 +228,6 @@ function ReviewNikonLowResPage() {
       sourceHasEmbedding={sourceHasEmbedding}
       similars={similars}
       maxDistance={data.maxDistance}
-      onApplyMaxDistance={(next) =>
-        navigate({
-          to: '/review/nikon-low-res',
-          search: {index, maxDistance: next},
-        })
-      }
     />
   )
 }
@@ -173,16 +249,21 @@ function NavButton({
   icon,
   iconRight,
 }: NavButtonProps) {
-  const className = cn(
-    'flex items-center gap-1 rounded-full px-4 py-2 text-sm font-semibold transition',
-    disabled
-      ? 'cursor-not-allowed bg-black/5 text-[var(--sea-ink-soft)]'
-      : 'bg-[var(--sea-ink)] text-white hover:opacity-90',
-  )
+  const enabledStyle = {
+    background: 'var(--accent)',
+    color: 'var(--accent-fg)',
+  }
+  const disabledStyle = {
+    background: 'var(--surface-2)',
+    color: 'var(--text-faint)',
+    cursor: 'not-allowed' as const,
+  }
+  const className =
+    'inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold transition'
 
   if (disabled) {
     return (
-      <span className={className} aria-disabled="true">
+      <span className={className} style={disabledStyle} aria-disabled="true">
         {!iconRight && icon}
         {label}
         {iconRight && icon}
@@ -195,6 +276,7 @@ function NavButton({
       to="/review/nikon-low-res"
       search={{index: to, maxDistance}}
       className={className}
+      style={enabledStyle}
     >
       {!iconRight && icon}
       {label}
