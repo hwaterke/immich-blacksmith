@@ -17,37 +17,6 @@ To build this application for production:
 npm run build
 ```
 
-## Testing
-
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
-
-```bash
-npm run test
-```
-
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-### Removing Tailwind CSS
-
-If you prefer not to use Tailwind CSS:
-
-1. Remove the demo pages in `src/routes/demo/`
-2. Replace the Tailwind import in `src/styles.css` with your own styles
-3. Remove `tailwindcss()` from the plugins array in `vite.config.ts`
-4. Uninstall the packages: `npm install @tailwindcss/vite tailwindcss -D`
-
-## Linting & Formatting
-
-This project uses [eslint](https://eslint.org/) and [prettier](https://prettier.io/) for linting and formatting. Eslint is configured using [tanstack/eslint-config](https://tanstack.com/config/latest/docs/eslint). The following scripts are available:
-
-```bash
-npm run lint
-npm run format
-npm run check
-```
-
 ## Deploy with Nitro
 
 This project uses Nitro as a generic server adapter, so it can run on any Node-compatible host.
@@ -61,162 +30,100 @@ The build output is a self-contained Node server. To deploy, push the `dist/` di
 
 For host-specific presets (Vercel, Netlify, Cloudflare, AWS Lambda, etc.) and tuning, see https://v3.nitro.build/deploy.
 
-## Shadcn
+## Docker Deployment
 
-Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
+The included `Dockerfile` produces a self-contained image that can run next to a
+self-hosted [Immich](https://immich.app) stack. The runtime image only contains
+the Nitro server bundle (`.output/`) on top of `node:22-alpine`, so it stays
+small (~150–250 MB).
+
+### Build the image
 
 ```bash
-pnpm dlx shadcn@latest add button
+docker build -t immich-plus:latest .
 ```
 
-## Routing
+The build is fully self-contained — it installs dependencies and runs
+`npm run build` inside the builder stage, so no local `node_modules` or
+`.output` is required.
 
-This project uses [TanStack Router](https://tanstack.com/router) with file-based routing. Routes are managed as files in `src/routes`.
+### Run alongside Immich
 
-### Adding A Route
+Add the following service to the existing Immich `docker-compose.yml` (the one
+that already defines `immich-server`, `database`, `redis`, …):
 
-To add a new route to your application just add a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import {Link} from '@tanstack/react-router'
+```yaml
+immich-plus:
+  container_name: immich_plus
+  image: immich-plus:latest
+  # Or build from a local checkout instead of pulling the image:
+  # build: ./immich-plus
+  environment:
+    DB_HOST: database
+    DB_PORT: 5432
+    DB_NAME: ${DB_DATABASE_NAME}
+    DB_USER: ${DB_USERNAME}
+    DB_PASSWORD: ${DB_PASSWORD}
+    IMMICH_URL: http://immich-server:2283/api
+    IMMICH_API_KEY: ${IMMICH_API_KEY}
+  ports:
+    - 3001:3000
+  depends_on:
+    - database
+    - immich-server
+  restart: always
 ```
 
-Then anywhere in your JSX you can use it like so:
+Notes:
 
-```tsx
-<Link to="/about">About</Link>
+- `DB_DATABASE_NAME`, `DB_USERNAME`, `DB_PASSWORD` are already defined in
+  Immich's `.env` file next to its `docker-compose.yml`. Reuse them as-is.
+- `IMMICH_API_KEY` must be generated in Immich (Account Settings → API Keys)
+  and added to the same `.env`.
+- Because the service runs in the same compose file, it joins Immich's default
+  network and can reach `database` and `immich-server` by service name — no
+  extra `networks:` entry needed.
+- Host port `3001` is used to avoid clashing with Immich's web UI on `2283`.
+  Change it to whatever you prefer.
+
+Bring it up with:
+
+```bash
+docker compose up -d immich-plus
 ```
 
-This will create a link that will navigate to the `/about` route.
+Then browse `http://<host>:3001`.
 
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
+### Optional: use a read-only PostgreSQL user
 
-### Using A Layout
+`immich-plus` only ever runs `SELECT` queries against Immich's database (all
+writes go through the Immich HTTP API using `IMMICH_API_KEY`). If you'd rather
+not hand the container Immich's full DB credentials, create a dedicated
+read-only role.
 
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you render `{children}` in the `shellComponent`.
+Open a `psql` shell inside the Immich database container:
 
-Here is an example layout that includes a header:
-
-```tsx
-import {HeadContent, Scripts, createRootRoute} from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-  head: () => ({
-    meta: [
-      {charSet: 'utf-8'},
-      {name: 'viewport', content: 'width=device-width, initial-scale=1'},
-      {title: 'My App'},
-    ],
-  }),
-  shellComponent: ({children}) => (
-    <html lang="en">
-      <head>
-        <HeadContent />
-      </head>
-      <body>
-        <header>
-          <nav>
-            <Link to="/">Home</Link>
-            <Link to="/about">About</Link>
-          </nav>
-        </header>
-        {children}
-        <Scripts />
-      </body>
-    </html>
-  ),
-})
+```bash
+docker exec -it immich_postgres psql -U <immich_user> -d <immich_db>
 ```
 
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
+Then run, once:
 
-## Server Functions
-
-TanStack Start provides server functions that allow you to write server-side code that seamlessly integrates with your client components.
-
-```tsx
-import {createServerFn} from '@tanstack/react-start'
-
-const getServerTime = createServerFn({
-  method: 'GET',
-}).handler(async () => {
-  return new Date().toISOString()
-})
-
-// Use in a component
-function MyComponent() {
-  const [time, setTime] = useState('')
-
-  useEffect(() => {
-    getServerTime().then(setTime)
-  }, [])
-
-  return <div>Server time: {time}</div>
-}
+```sql
+CREATE USER immich_readonly WITH PASSWORD 'choose-a-password';
+GRANT CONNECT ON DATABASE immich TO immich_readonly;
+GRANT USAGE ON SCHEMA public TO immich_readonly;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO immich_readonly;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public
+  GRANT SELECT ON TABLES TO immich_readonly;
 ```
 
-## API Routes
+Then point the compose service at the new credentials:
 
-You can create API routes by using the `server` property in your route definitions:
-
-```tsx
-import {createFileRoute} from '@tanstack/react-router'
-import {json} from '@tanstack/react-start'
-
-export const Route = createFileRoute('/api/hello')({
-  server: {
-    handlers: {
-      GET: () => json({message: 'Hello, World!'}),
-    },
-  },
-})
+```yaml
+DB_USER: immich_readonly
+DB_PASSWORD: choose-a-password
 ```
 
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-import {createFileRoute} from '@tanstack/react-router'
-
-export const Route = createFileRoute('/people')({
-  loader: async () => {
-    const response = await fetch('https://swapi.dev/api/people')
-    return response.json()
-  },
-  component: PeopleComponent,
-})
-
-function PeopleComponent() {
-  const data = Route.useLoaderData()
-  return (
-    <ul>
-      {data.results.map((person) => (
-        <li key={person.name}>{person.name}</li>
-      ))}
-    </ul>
-  )
-}
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
-
-For TanStack Start specific documentation, visit [TanStack Start](https://tanstack.com/start).
+Write workflows (e.g. marking duplicates for deletion) keep working because
+they go through Immich's REST API, not direct SQL.
