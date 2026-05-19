@@ -18,6 +18,7 @@ export function getNikonLowResAssets() {
     .selectFrom('asset')
     .select(['asset.id', 'asset.originalPath'])
     .where('asset.originalPath', 'like', '%to-sort/nikon-low-res%')
+    .where('asset.deletedAt', 'is', null)
     .orderBy('asset.id')
     .execute()
 }
