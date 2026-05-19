@@ -148,8 +148,14 @@ function ReviewNikonLowResPage() {
     )
   }
 
-  const {index, source, similars, sourcePath, sourceHasEmbedding, immichWebUrl} =
-    data
+  const {
+    index,
+    source,
+    similars,
+    sourcePath,
+    sourceHasEmbedding,
+    immichWebUrl,
+  } = data
   const hasPrev = index > 0
   const hasNext = index < data.total - 1
   const progress = ((index + 1) / data.total) * 100

@@ -5,11 +5,23 @@ export const Route = createFileRoute('/')({component: App})
 interface ToolCard {
   title: string
   description: string
-  href: '/review/nikon-low-res'
+  href: '/review/similar' | '/review/compare' | '/review/nikon-low-res'
   search?: Record<string, unknown>
 }
 
 const tools: ToolCard[] = [
+  {
+    title: 'Similar assets',
+    description:
+      'Provide an asset id and see a ranked list of similar assets by cosine distance — useful for hunting near-duplicates.',
+    href: '/review/similar',
+  },
+  {
+    title: 'Compare two assets',
+    description:
+      'Paste two asset ids to see them side by side with the cosine distance and a per-field diff.',
+    href: '/review/compare',
+  },
   {
     title: 'Nikon low-res review',
     description:

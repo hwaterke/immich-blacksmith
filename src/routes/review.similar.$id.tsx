@@ -10,23 +10,23 @@ const SearchSchema = z.object({
 })
 
 interface LoaderData extends DuplicatesData {
-  assetId: string
+  id: string
   maxDistance: number
 }
 
-export const Route = createFileRoute('/review/duplicates/$assetId')({
+export const Route = createFileRoute('/review/similar/$id')({
   validateSearch: SearchSchema,
   loaderDeps: ({search}) => ({maxDistance: search.maxDistance}),
   loader: async ({params, deps}): Promise<LoaderData> => {
     const data = await loadDuplicatesFor({
-      data: {assetId: params.assetId, maxDistance: deps.maxDistance},
+      data: {assetId: params.id, maxDistance: deps.maxDistance},
     })
-    return {...data, assetId: params.assetId, maxDistance: deps.maxDistance}
+    return {...data, id: params.id, maxDistance: deps.maxDistance}
   },
-  component: ReviewDuplicatesPage,
+  component: ReviewSimilarPage,
 })
 
-function ReviewDuplicatesPage() {
+function ReviewSimilarPage() {
   const data = Route.useLoaderData()
   const navigate = useNavigate()
   const filename = data.source.asset?.originalFileName
@@ -34,7 +34,7 @@ function ReviewDuplicatesPage() {
   const header = (
     <div className="flex flex-wrap items-start justify-between gap-4">
       <div className="min-w-0">
-        <p className="kicker mb-1">Review · duplicates</p>
+        <p className="kicker mb-1">Review · similar</p>
         <h1
           className="text-2xl font-bold tracking-tight"
           style={{color: 'var(--text)'}}
@@ -45,15 +45,15 @@ function ReviewDuplicatesPage() {
           className="mt-1 break-all font-mono text-xs"
           style={{color: 'var(--text-faint)'}}
         >
-          {data.assetId}
+          {data.id}
         </p>
       </div>
       <MaxDistanceForm
         value={data.maxDistance}
         onApply={(next) =>
           navigate({
-            to: '/review/duplicates/$assetId',
-            params: {assetId: data.assetId},
+            to: '/review/similar/$id',
+            params: {id: data.id},
             search: {maxDistance: next},
           })
         }
@@ -63,7 +63,7 @@ function ReviewDuplicatesPage() {
 
   return (
     <DuplicatesReview
-      key={data.assetId}
+      key={data.id}
       header={header}
       source={data.source}
       sourceHasEmbedding={data.sourceHasEmbedding}

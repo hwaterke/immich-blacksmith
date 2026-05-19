@@ -19,6 +19,13 @@ export interface DuplicatesData {
   immichWebUrl: string
 }
 
+export interface ComparisonData {
+  a: AssetResult
+  b: AssetResult
+  distance: number | null
+  immichWebUrl: string
+}
+
 export const getNikonLowResList = createServerFn({method: 'GET'}).handler(
   async () => {
     const {getNikonLowResAssets} = await import('./assetQueries')
@@ -69,4 +76,34 @@ export const loadDuplicatesFor = createServerFn({method: 'GET'})
       similars: similarResults,
       immichWebUrl,
     }
+  })
+
+export const loadComparison = createServerFn({method: 'GET'})
+  .inputValidator((data: {id1: string; id2: string}) => data)
+  .handler(async ({data}): Promise<ComparisonData> => {
+    const {assetDistance} = await import('./assetQueries')
+    const {ensureImmichInit, getImmichWebUrl} = await import('./immich')
+    const {getAssetInfo} = await import('@immich/sdk')
+
+    ensureImmichInit()
+    const immichWebUrl = getImmichWebUrl()
+    const loadAsset = async (id: string): Promise<AssetResult> => {
+      try {
+        const asset = await getAssetInfo({id})
+        return {id, asset}
+      } catch (err) {
+        return {
+          id,
+          error: err instanceof Error ? err.message : 'Failed to load asset',
+        }
+      }
+    }
+
+    const [a, b, distance] = await Promise.all([
+      loadAsset(data.id1),
+      loadAsset(data.id2),
+      assetDistance(data.id1, data.id2),
+    ])
+
+    return {a, b, distance, immichWebUrl}
   })

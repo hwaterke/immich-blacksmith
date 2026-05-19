@@ -41,6 +41,32 @@ export default function Header() {
             Home
           </Link>
           <Link
+            to="/review/similar"
+            className={linkBase}
+            style={{color: 'var(--text-muted)'}}
+            activeProps={{
+              style: {
+                color: 'var(--accent)',
+                background: 'var(--surface-2)',
+              },
+            }}
+          >
+            Similar
+          </Link>
+          <Link
+            to="/review/compare"
+            className={linkBase}
+            style={{color: 'var(--text-muted)'}}
+            activeProps={{
+              style: {
+                color: 'var(--accent)',
+                background: 'var(--surface-2)',
+              },
+            }}
+          >
+            Compare
+          </Link>
+          <Link
             to="/review/nikon-low-res"
             className={linkBase}
             style={{color: 'var(--text-muted)'}}
