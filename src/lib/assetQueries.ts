@@ -13,6 +13,22 @@ export interface SimilarAssetSearchResult {
   results: SimilarAssetResult[]
 }
 
+export async function findAssetIdByOriginalPath(
+  originalPath: string,
+): Promise<{assetId: string} | {error: 'not_found' | 'ambiguous'}> {
+  const rows = await db
+    .selectFrom('asset')
+    .select('id')
+    .where('originalPath', '=', originalPath)
+    .where('deletedAt', 'is', null)
+    .limit(2)
+    .execute()
+
+  if (rows.length === 0) return {error: 'not_found'}
+  if (rows.length > 1) return {error: 'ambiguous'}
+  return {assetId: rows[0].id}
+}
+
 export function getNikonLowResAssets() {
   return db
     .selectFrom('asset')

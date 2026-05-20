@@ -1,5 +1,6 @@
 import {createServerFn} from '@tanstack/react-start'
 import type {AssetResponseDto} from '@immich/sdk'
+import {looksLikeAssetId} from './utils'
 
 export interface AssetResult {
   id: string
@@ -32,6 +33,27 @@ export const getNikonLowResList = createServerFn({method: 'GET'}).handler(
     return getNikonLowResAssets()
   },
 )
+
+export const resolveOriginalPath = createServerFn({method: 'GET'})
+  .inputValidator((data: {originalPath: string}) => data)
+  .handler(async ({data}) => {
+    const {findAssetIdByOriginalPath} = await import('./assetQueries')
+    return findAssetIdByOriginalPath(data.originalPath)
+  })
+
+export async function resolveInputToAssetId(
+  raw: string,
+): Promise<{assetId: string} | {error: string}> {
+  const trimmed = raw.trim()
+  if (!trimmed) return {error: 'Required'}
+  if (looksLikeAssetId(trimmed)) return {assetId: trimmed}
+
+  const result = await resolveOriginalPath({data: {originalPath: trimmed}})
+  if ('assetId' in result) return {assetId: result.assetId}
+  if (result.error === 'not_found')
+    return {error: 'No asset found for that path'}
+  return {error: 'Path matches multiple assets — be more specific'}
+}
 
 export const loadDuplicatesFor = createServerFn({method: 'GET'})
   .inputValidator((data: {assetId: string; maxDistance: number}) => data)
