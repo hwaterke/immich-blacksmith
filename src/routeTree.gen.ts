@@ -14,6 +14,7 @@ import { Route as PingRouteImport } from './routes/ping'
 import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewNikonLowResRouteImport } from './routes/review.nikon-low-res'
+import { Route as ReviewDuplicatesRouteImport } from './routes/review.duplicates'
 import { Route as ApiNikonLowResRouteImport } from './routes/api.nikon-low-res'
 import { Route as ApiMarkForDeletionRouteImport } from './routes/api.mark-for-deletion'
 import { Route as ReviewSimilarIndexRouteImport } from './routes/review.similar.index'
@@ -47,6 +48,11 @@ const IndexRoute = IndexRouteImport.update({
 const ReviewNikonLowResRoute = ReviewNikonLowResRouteImport.update({
   id: '/review/nikon-low-res',
   path: '/review/nikon-low-res',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReviewDuplicatesRoute = ReviewDuplicatesRouteImport.update({
+  id: '/review/duplicates',
+  path: '/review/duplicates',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiNikonLowResRoute = ApiNikonLowResRouteImport.update({
@@ -102,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
@@ -118,6 +125,7 @@ export interface FileRoutesByTo {
   '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
@@ -135,6 +143,7 @@ export interface FileRoutesById {
   '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
@@ -153,6 +162,7 @@ export interface FileRouteTypes {
     | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/review/duplicates'
     | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
@@ -169,6 +179,7 @@ export interface FileRouteTypes {
     | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/review/duplicates'
     | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
@@ -185,6 +196,7 @@ export interface FileRouteTypes {
     | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/review/duplicates'
     | '/review/nikon-low-res'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
@@ -202,6 +214,7 @@ export interface RootRouteChildren {
   SanityCheckRoute: typeof SanityCheckRoute
   ApiMarkForDeletionRoute: typeof ApiMarkForDeletionRoute
   ApiNikonLowResRoute: typeof ApiNikonLowResRoute
+  ReviewDuplicatesRoute: typeof ReviewDuplicatesRoute
   ReviewNikonLowResRoute: typeof ReviewNikonLowResRoute
   ApiSimilarIdRoute: typeof ApiSimilarIdRoute
   ApiThumbnailIdRoute: typeof ApiThumbnailIdRoute
@@ -247,6 +260,13 @@ declare module '@tanstack/react-router' {
       path: '/review/nikon-low-res'
       fullPath: '/review/nikon-low-res'
       preLoaderRoute: typeof ReviewNikonLowResRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/review/duplicates': {
+      id: '/review/duplicates'
+      path: '/review/duplicates'
+      fullPath: '/review/duplicates'
+      preLoaderRoute: typeof ReviewDuplicatesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/nikon-low-res': {
@@ -322,6 +342,7 @@ const rootRouteChildren: RootRouteChildren = {
   SanityCheckRoute: SanityCheckRoute,
   ApiMarkForDeletionRoute: ApiMarkForDeletionRoute,
   ApiNikonLowResRoute: ApiNikonLowResRoute,
+  ReviewDuplicatesRoute: ReviewDuplicatesRoute,
   ReviewNikonLowResRoute: ReviewNikonLowResRoute,
   ApiSimilarIdRoute: ApiSimilarIdRoute,
   ApiThumbnailIdRoute: ApiThumbnailIdRoute,

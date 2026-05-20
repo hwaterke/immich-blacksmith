@@ -79,6 +79,19 @@ export default function Header() {
           >
             Nikon Low Res
           </Link>
+          <Link
+            to="/review/duplicates"
+            className={linkBase}
+            style={{color: 'var(--text-muted)'}}
+            activeProps={{
+              style: {
+                color: 'var(--accent)',
+                background: 'var(--surface-2)',
+              },
+            }}
+          >
+            Duplicates
+          </Link>
         </div>
       </nav>
     </header>

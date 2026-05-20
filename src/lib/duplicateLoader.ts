@@ -27,6 +27,22 @@ export interface ComparisonData {
   immichWebUrl: string
 }
 
+export interface DuplicateGroup {
+  duplicateId: string
+  assets: AssetResponseDto[]
+  suggestedKeepAssetIds: string[]
+}
+
+export type DuplicateGroupResult =
+  | {kind: 'empty'}
+  | {
+      kind: 'loaded'
+      total: number
+      index: number
+      group: DuplicateGroup
+      immichWebUrl: string
+    }
+
 export const getNikonLowResList = createServerFn({method: 'GET'}).handler(
   async () => {
     const {getNikonLowResAssets} = await import('./assetQueries')
@@ -97,6 +113,34 @@ export const loadDuplicatesFor = createServerFn({method: 'GET'})
       sourceHasEmbedding,
       similars: similarResults,
       immichWebUrl,
+    }
+  })
+
+export const loadDuplicateGroup = createServerFn({method: 'GET'})
+  .inputValidator((data: {index: number}) => data)
+  .handler(async ({data}): Promise<DuplicateGroupResult> => {
+    const {ensureImmichInit, getImmichWebUrl} = await import('./immich')
+    const {getAssetDuplicates} = await import('@immich/sdk')
+
+    ensureImmichInit()
+    const groups = await getAssetDuplicates()
+    if (groups.length === 0) {
+      return {kind: 'empty'}
+    }
+
+    const index = Math.min(Math.max(data.index, 0), groups.length - 1)
+    const group = groups[index]
+
+    return {
+      kind: 'loaded',
+      total: groups.length,
+      index,
+      group: {
+        duplicateId: group.duplicateId,
+        assets: group.assets,
+        suggestedKeepAssetIds: group.suggestedKeepAssetIds,
+      },
+      immichWebUrl: getImmichWebUrl(),
     }
   })
 
