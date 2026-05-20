@@ -1,3 +1,4 @@
+import {Link} from '@tanstack/react-router'
 import {useState} from 'react'
 import type {MouseEvent, ReactNode} from 'react'
 import {
@@ -484,7 +485,15 @@ export function DuplicateAssetCard({
         </div>
       </div>
 
-      <div className="mt-4 px-4 pb-4">
+      <div className="mt-4 flex flex-col gap-2 px-4 pb-4">
+        <Link
+          to="/review/similar/$id"
+          params={{id}}
+          className="flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-semibold transition hover:brightness-110"
+          style={{background: 'var(--accent)', color: 'var(--accent-fg)'}}
+        >
+          View similar
+        </Link>
         <button
           type="button"
           onClick={handleMark}
