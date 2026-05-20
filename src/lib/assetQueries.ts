@@ -43,43 +43,36 @@ export async function findSimilarAssetIds(
   assetId: string,
   maxDistance = 0.01,
 ): Promise<SimilarAssetSearchResult> {
-  const probes = 1
+  const source = await db
+    .selectFrom('smart_search')
+    .select('embedding')
+    .where('assetId', '=', assetId)
+    .executeTakeFirst()
 
-  return db.transaction().execute(async (trx) => {
-    await sql`set local vchordrq.probes = ${sql.lit(probes)}`.execute(trx)
+  if (!source) return {sourceHasEmbedding: false, results: []}
 
-    const source = await trx
-      .selectFrom('smart_search')
-      .select('embedding')
-      .where('assetId', '=', assetId)
-      .executeTakeFirst()
+  const results = await db
+    .with('cte', (qb) =>
+      qb
+        .selectFrom('asset')
+        .innerJoin('smart_search', 'asset.id', 'smart_search.assetId')
+        .select([
+          'asset.id as assetId',
+          'asset.originalPath as originalPath',
+          sql<number>`smart_search.embedding <=> ${source.embedding}`.as(
+            'distance',
+          ),
+        ])
+        .where('asset.deletedAt', 'is', null)
+        .where('asset.id', '!=', assetId),
+    )
+    .selectFrom('cte')
+    .selectAll()
+    .where('cte.distance', '<=', maxDistance)
+    .orderBy('distance')
+    .execute()
 
-    if (!source) return {sourceHasEmbedding: false, results: []}
-
-    const results = await trx
-      .with('cte', (qb) =>
-        qb
-          .selectFrom('asset')
-          .innerJoin('smart_search', 'asset.id', 'smart_search.assetId')
-          .select([
-            'asset.id as assetId',
-            'asset.originalPath as originalPath',
-            sql<number>`smart_search.embedding <=> ${source.embedding}`.as(
-              'distance',
-            ),
-          ])
-          .where('asset.deletedAt', 'is', null)
-          .where('asset.id', '!=', assetId)
-          .orderBy('distance')
-          .limit(64),
-      )
-      .selectFrom('cte')
-      .selectAll()
-      .where('cte.distance', '<=', maxDistance)
-      .execute()
-
-    return {sourceHasEmbedding: true, results}
-  })
+  return {sourceHasEmbedding: true, results}
 }
 
 export function assetDistance(assetId1: string, assetId2: string) {
