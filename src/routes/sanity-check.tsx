@@ -10,9 +10,9 @@ export const Route = createFileRoute('/sanity-check')({
 interface CardProps {
   id: string
   originalPath: string
-  dateTime: string
-  width: number
-  height: number
+  dateTime?: string
+  width?: number
+  height?: number
   distance?: number
 }
 
@@ -36,12 +36,20 @@ function Card({
         <dt className="py-1 pr-3 text-sm text-(--text-faint)">Path</dt>
         <dd className="py-1 pl-2 text-xs font-mono">{originalPath}</dd>
 
-        <dt className="py-1 pr-3 text-sm text-(--text-faint)">Date Time</dt>
-        <dd className="py-1 pl-2 text-sm">{dateTime}</dd>
-        <dt className="py-1 pr-3 text-sm text-(--text-faint)">Size</dt>
-        <dd className="py-1 pl-2 text-sm">
-          {width} × {height}
-        </dd>
+        {dateTime && (
+          <>
+            <dt className="py-1 pr-3 text-sm text-(--text-faint)">Date Time</dt>
+            <dd className="py-1 pl-2 text-sm">{dateTime}</dd>
+          </>
+        )}
+        {width && height && (
+          <>
+            <dt className="py-1 pr-3 text-sm text-(--text-faint)">Size</dt>
+            <dd className="py-1 pl-2 text-sm">
+              {width} × {height}
+            </dd>
+          </>
+        )}
         {distance && (
           <>
             <dt className="py-1 pr-3 text-sm text-(--text-faint)">Distance</dt>
@@ -69,7 +77,7 @@ async function handleCopy(e: MouseEvent<HTMLButtonElement>) {
 function SanityCheckPage() {
   return (
     <div>
-      <h1>Sanity Check</h1>
+      <h1>Sanity Check - From Query</h1>
 
       <button type="button" onClick={handleCopy}>
         Print deletion list
