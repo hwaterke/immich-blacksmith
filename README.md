@@ -69,6 +69,14 @@ immich-blacksmith:
     DB_PASSWORD: ${DB_PASSWORD}
     IMMICH_URL: http://immich-server:2283/api
     IMMICH_API_KEY: ${IMMICH_API_KEY}
+    # Optional — only needed if the media is mounted at a different path than
+    # Immich's. Leave unset when mounting at the identical path (see below).
+    # MEDIA_PATH_SOURCE: /usr/src/app/upload
+    # MEDIA_PATH_TARGET: /media
+  volumes:
+    # Mount the same media Immich sees so Blacksmith can run exiftool on it.
+    # Easiest: mount it at the identical path Immich uses (no translation needed).
+    - ${UPLOAD_LOCATION}:/usr/src/app/upload:ro
   ports:
     - 3001:3000
   depends_on:
@@ -82,6 +90,13 @@ Notes:
 - `DB_DATABASE_NAME`, `DB_USERNAME`, `DB_PASSWORD` are already in Immich's
   `.env`. Reuse them as-is.
 - `IMMICH_API_KEY` must be generated in Immich and added to the same `.env`.
+- The EXIF panel runs `exiftool` directly on the image files, so the media must
+  be mounted into this container. Mount it at the **same path** Immich uses
+  (matching `asset.originalPath`) and no translation is needed. Otherwise, before
+  running exiftool Blacksmith strips `MEDIA_PATH_SOURCE` (if set) from the path
+  and prepends `MEDIA_PATH_TARGET`: leave `MEDIA_PATH_SOURCE` blank and set
+  `MEDIA_PATH_TARGET` to prepend a mount base (e.g. `/Volumes`), or set both to
+  swap one prefix for another. A read-only (`:ro`) mount is sufficient.
 - The service joins Immich's default network, so it reaches `database` and
   `immich-server` by service name — no extra `networks:` entry needed.
 - Host port `3001` avoids clashing with Immich's web UI on `2283`. Change it
@@ -108,6 +123,8 @@ All configuration is via environment variables.
 | `DB_NAME`        | Immich database name.                                                       |
 | `DB_USER`        | PostgreSQL user. A read-only role is supported and recommended (see below). |
 | `DB_PASSWORD`    | PostgreSQL password for the user above.                                     |
+| `MEDIA_PATH_SOURCE` | Optional. Path prefix stored by Immich (`asset.originalPath`) to strip before exiftool runs. Leave blank to keep the whole path. |
+| `MEDIA_PATH_TARGET` | Optional. Path prefix prepended after stripping `MEDIA_PATH_SOURCE` (e.g. `/Volumes`). Leave both blank if media is mounted at the identical path. |
 
 See [`.env.example`](.env.example) for a template.
 

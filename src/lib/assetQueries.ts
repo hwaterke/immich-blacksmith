@@ -29,6 +29,19 @@ export async function findAssetIdByOriginalPath(
   return {assetId: rows[0].id}
 }
 
+export async function findOriginalPathByAssetId(
+  assetId: string,
+): Promise<string | null> {
+  const row = await db
+    .selectFrom('asset')
+    .select('originalPath')
+    .where('id', '=', assetId)
+    .where('deletedAt', 'is', null)
+    .executeTakeFirst()
+
+  return row?.originalPath ?? null
+}
+
 export function getNikonLowResAssets() {
   return db
     .selectFrom('asset')

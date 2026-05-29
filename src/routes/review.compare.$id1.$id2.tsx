@@ -83,6 +83,7 @@ function ReviewComparePage() {
             reference={data.b.asset}
             label="A"
             immichWebUrl={data.immichWebUrl}
+            defaultExifOpen
           />
           <DuplicateAssetCard
             id={data.b.id}
@@ -93,6 +94,7 @@ function ReviewComparePage() {
             reference={data.a.asset}
             label="B"
             immichWebUrl={data.immichWebUrl}
+            defaultExifOpen
           />
         </div>
       </div>

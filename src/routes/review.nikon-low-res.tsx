@@ -70,10 +70,6 @@ export const Route = createFileRoute('/review/nikon-low-res')({
 function ReviewNikonLowResPage() {
   const data = Route.useLoaderData()
 
-  console.log({
-    data,
-  })
-
   const navigate = Route.useNavigate()
   const requestedIndex = data.kind === 'loaded' ? data.requestedIndex : null
   const resolvedIndex = data.kind === 'loaded' ? data.index : null
