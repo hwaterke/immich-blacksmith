@@ -1,12 +1,9 @@
 import {Link} from '@tanstack/react-router'
-import {useQuery} from '@tanstack/react-query'
 import {useState} from 'react'
 import type {MouseEvent, ReactNode} from 'react'
 import {
   Camera,
   Check,
-  ChevronDown,
-  ChevronRight,
   Copy,
   MapPin,
   ShieldAlert,
@@ -14,7 +11,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import type {AssetResponseDto} from '@immich/sdk'
-import {loadExif} from '../lib/exifLoader'
+import {ExifSection} from './ExifSection'
 import {cn} from '../lib/utils'
 
 interface Props {
@@ -208,71 +205,6 @@ function Row({label, children, differs}: RowProps) {
   )
 }
 
-function formatExifValue(value: unknown): string {
-  if (value == null) return ''
-  if (typeof value === 'string') return value
-  if (typeof value === 'object') return JSON.stringify(value)
-  return String(value)
-}
-
-function ExifSection({id, defaultOpen}: {id: string; defaultOpen?: boolean}) {
-  const [open, setOpen] = useState(defaultOpen ?? false)
-
-  const {data, isLoading, isError, error} = useQuery({
-    queryKey: ['exif', id],
-    queryFn: () => loadExif({data: {assetId: id}}),
-    enabled: open,
-    staleTime: 5 * 60 * 1000,
-  })
-
-  const tags = data && 'tags' in data ? data.tags : undefined
-  const serverError = data && 'error' in data ? data.error : undefined
-
-  return (
-    <div className="border-t px-4 py-3" style={{borderColor: 'var(--border)'}}>
-      <button
-        type="button"
-        onClick={() => setOpen((v) => !v)}
-        className="flex w-full items-center gap-1.5 text-left text-sm font-semibold transition hover:brightness-110"
-        style={{color: 'var(--text)'}}
-      >
-        {open ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-        EXIF (exiftool)
-      </button>
-
-      {open ? (
-        <div className="mt-2">
-          {isLoading ? (
-            <p className="text-sm" style={{color: 'var(--text-faint)'}}>
-              Reading metadata…
-            </p>
-          ) : isError ? (
-            <p className="text-sm" style={{color: 'var(--danger)'}}>
-              {error instanceof Error ? error.message : 'Failed to load EXIF'}
-            </p>
-          ) : serverError ? (
-            <p className="text-sm" style={{color: 'var(--danger)'}}>
-              {serverError}
-            </p>
-          ) : tags ? (
-            <dl
-              className="grid max-h-96 grid-cols-[max-content_1fr] gap-x-3 gap-y-0.5 overflow-auto"
-              style={{color: 'var(--text)'}}
-            >
-              {Object.entries(tags).map(([key, value]) => (
-                <Row key={key} label={<span className="font-mono">{key}</span>}>
-                  <span className="break-all font-mono text-xs">
-                    {formatExifValue(value)}
-                  </span>
-                </Row>
-              ))}
-            </dl>
-          ) : null}
-        </div>
-      ) : null}
-    </div>
-  )
-}
 
 export function DuplicateAssetCard({
   id,
