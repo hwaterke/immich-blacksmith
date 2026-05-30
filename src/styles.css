@@ -221,7 +221,7 @@ body {
     letter-spacing: 0;
   }
   .shot {
-    @apply block aspect-[4/3] w-full overflow-hidden rounded-[7px] border border-border bg-bg transition-all duration-200;
+    @apply block h-[220px] w-full max-w-[300px] overflow-hidden rounded-[7px] border border-border bg-bg transition-all duration-200;
   }
   .shot.rec {
     @apply border border-best-line;
