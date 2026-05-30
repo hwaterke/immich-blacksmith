@@ -1,47 +1,196 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
+
 @import 'tailwindcss';
 @plugin '@tailwindcss/typography';
+
+@theme {
+  --font-family-sans: 'Geist', '-apple-system', 'system-ui', 'sans-serif';
+  --font-family-mono: 'Geist Mono', 'SF Mono', 'ui-monospace', 'monospace';
+
+  --color-bg: oklch(0.155 0.004 70);
+  --color-surface: oklch(0.195 0.005 70);
+  --color-surface-2: oklch(0.232 0.005 70);
+  --color-surface-3: oklch(0.275 0.006 70);
+  --color-border: oklch(0.31 0.006 70);
+  --color-border-2: oklch(0.4 0.007 70);
+  --color-ink: oklch(0.945 0.004 80);
+  --color-ink-2: oklch(0.76 0.005 80);
+  --color-ink-3: oklch(0.6 0.005 75);
+  --color-ink-4: oklch(0.47 0.005 72);
+  --color-accent: oklch(0.81 0.115 78);
+  --color-accent-ink: oklch(0.87 0.12 82);
+  --color-accent-soft: oklch(0.3 0.045 72);
+  --color-best: oklch(0.72 0.15 158);
+  --color-best-ink: oklch(0.84 0.15 162);
+  --color-best-soft: oklch(0.3 0.055 160);
+  --color-best-line: oklch(0.5 0.1 160);
+  --color-del: oklch(0.62 0.18 25);
+  --color-del-ink: oklch(0.78 0.14 30);
+  --color-del-soft: oklch(0.31 0.07 25);
+  --color-del-line: oklch(0.48 0.12 25);
+
+  --shadow-soft: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 1px rgba(0, 0, 0, 0.3);
+  --shadow-card: 0 2px 4px rgba(0, 0, 0, 0.35), 0 6px 18px rgba(0, 0, 0, 0.4);
+  --shadow-pop: 0 16px 40px rgba(0, 0, 0, 0.55), 0 4px 12px rgba(0, 0, 0, 0.4);
+}
 
 :root {
   color-scheme: dark;
 
-  --bg: #0d1117;
-  --surface: #161b22;
-  --surface-2: #21262d;
-  --border: #30363d;
-  --border-strong: #484f58;
-  --text: #f0f6fc;
-  --text-muted: #c9d1d9;
-  --text-faint: #8b949e;
-  --accent: #58a6ff;
-  --accent-fg: #0d1117;
-  --success: #3fb950;
-  --warning: #d29922;
-  --danger: #f85149;
-  --diff-bg: rgba(210, 153, 34, 0.18);
-  --diff-fg: #f0c674;
+  /* ── new design tokens ── */
+  --bg: oklch(0.155 0.004 70);
+  --surface: oklch(0.195 0.005 70);
+  --surface-2: oklch(0.232 0.005 70);
+  --surface-3: oklch(0.275 0.006 70);
+  --border: oklch(0.31 0.006 70);
+  --border-2: oklch(0.4 0.007 70);
+  --ink: oklch(0.945 0.004 80);
+  --ink-2: oklch(0.76 0.005 80);
+  --ink-3: oklch(0.6 0.005 75);
+  --ink-4: oklch(0.47 0.005 72);
+  --accent: oklch(0.81 0.115 78);
+  --accent-ink: oklch(0.87 0.12 82);
+  --accent-soft: oklch(0.3 0.045 72);
+  --best: oklch(0.72 0.15 158);
+  --best-ink: oklch(0.84 0.15 162);
+  --best-soft: oklch(0.3 0.055 160);
+  --best-line: oklch(0.5 0.1 160);
+  --del: oklch(0.62 0.18 25);
+  --del-ink: oklch(0.78 0.14 30);
+  --del-soft: oklch(0.31 0.07 25);
+  --del-line: oklch(0.48 0.12 25);
+
+  /* ── legacy aliases (keep existing components working) ── */
+  --text: var(--ink);
+  --text-muted: var(--ink-2);
+  --text-faint: var(--ink-3);
+  --border-strong: var(--border-2);
+  --accent-fg: oklch(0.155 0.004 70);
+  --success: var(--best);
+  --warning: oklch(0.72 0.13 80);
+  --danger: var(--del);
+  --diff-bg: var(--del-soft);
+  --diff-fg: var(--del-ink);
   --radius: 0.5rem;
 }
 
 html,
 body {
   background: var(--bg);
-  color: var(--text);
+  color: var(--ink);
 }
 
 body {
   min-height: 100vh;
+  letter-spacing: -0.006em;
 }
 
+/* ── kicker label ── */
 .kicker {
   font-size: 0.6875rem;
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--text-faint);
+  color: var(--ink-3);
 }
 
+/* ── focus ring ── */
 :focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: 4px;
+}
+
+/* ── buttons ── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: 9px;
+  padding: 9px 15px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--ink);
+  transition:
+    background 0.15s,
+    border-color 0.15s;
+}
+.btn:hover {
+  background: var(--surface-2);
+}
+.btn.ghost {
+  color: var(--ink-2);
+}
+.btn.primary {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--bg);
+}
+.btn.primary:hover {
+  background: var(--ink-2);
+}
+.btn.danger {
+  background: var(--del);
+  border-color: var(--del);
+  color: #fff;
+}
+.btn.danger:hover {
+  background: oklch(0.5 0.17 26);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ── pills ── */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 500;
+  border-radius: 999px;
+  padding: 4px 11px;
+}
+.pill.sim {
+  color: var(--best-ink);
+  background: var(--best-soft);
+  border: 1px solid var(--best-line);
+}
+.pill.ghost {
+  color: var(--ink-2);
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+/* ── keyboard shortcut chip ── */
+.kbd {
+  font-family: var(--font-family-mono, ui-monospace);
+  font-size: 10.5px;
+  border: 1px solid var(--border);
+  border-bottom-width: 2px;
+  border-radius: 5px;
+  padding: 1px 6px;
+  background: var(--surface-2);
+  color: var(--ink-3);
+}
+
+/* ── icon button ── */
+.icon-btn {
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--surface);
+  color: var(--ink-2);
+  cursor: pointer;
+}
+.icon-btn:hover {
+  background: var(--surface-2);
 }
