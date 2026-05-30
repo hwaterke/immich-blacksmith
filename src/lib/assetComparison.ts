@@ -1,4 +1,5 @@
 import type {AssetResponseDto, ExifResponseDto} from '@immich/sdk'
+import type {ExifTags, JsonValue} from './exif'
 
 /* ──────────────────────────────────────────────────────────────────────────
    Pure comparison logic + view-model builder for the asset comparison table.
@@ -39,7 +40,6 @@ export interface ComparisonRow {
 export interface ComparisonModel {
   columns: ComparisonColumn[]
   specRows: ComparisonRow[]
-  exifRows: ComparisonRow[]
   /** Total size of every asset in the set, formatted (e.g. "60.6 MB"). */
   totalSize: string
   /** Closest non-reference distance as a match percentage, or null. */
@@ -194,11 +194,13 @@ function colTones(
     const allSame = presentValues.every((v) => v === presentValues[0])
     const anyMissing = present.some((p) => !p)
     present.forEach((isPresent, i) => {
-      if (!isPresent) return // missing → never toned
-      if (!allSame)
-        tones[i] = 'neutral' // values differ → neutral
-      else if (anyMissing) tones[i] = 'best' // same but some missing → green
-      // all present & all same → leave untoned
+      if (!allSame) {
+        // values differ → neutral on present, red on the missing ones
+        tones[i] = isPresent ? 'neutral' : 'worst'
+      } else if (isPresent && anyMissing) {
+        tones[i] = 'best' // present & all-same but some missing → green
+      }
+      // missing while all-same → untoned; all present & same → untoned
     })
     return tones
   }
@@ -293,44 +295,73 @@ const SPECS: SpecDef[] = [
   },
 ]
 
-/* ── curated EXIF rows (from Immich exifInfo), diffed against the reference ── */
+/* ── EXIF rows (from live exiftool output, compared across columns) ──
+   Data is the flat, group-qualified tag map exiftool emits (keys like
+   `EXIF:IFD0:Make`). Rows are toned with the shared `'same'` rule. */
 
-interface ExifField {
-  label: string
-  get: (exif: ExifResponseDto | undefined) => string
+/** Render a raw exiftool value as a string. Objects/arrays are JSON-encoded. */
+export function formatExifValue(value: JsonValue | undefined): string {
+  if (value == null) return ''
+  if (typeof value === 'string') return value
+  if (typeof value === 'object') return JSON.stringify(value)
+  return String(value)
 }
 
-const EXIF_FIELDS: ExifField[] = [
-  {label: 'Make', get: (e) => e?.make || '—'},
-  {label: 'Model', get: (e) => e?.model || '—'},
-  {label: 'Lens model', get: (e) => e?.lensModel || '—'},
-  {
-    label: 'Focal length',
-    get: (e) => (e?.focalLength ? `${e.focalLength} mm` : '—'),
-  },
-  {label: 'Aperture', get: (e) => (e?.fNumber ? `ƒ/${e.fNumber}` : '—')},
-  {label: 'Shutter', get: (e) => e?.exposureTime || '—'},
-  {label: 'ISO', get: (e) => (e?.iso ? `ISO ${e.iso}` : '—')},
-  {
-    label: 'Dimensions',
-    get: (e) => formatDimensions(e?.exifImageWidth, e?.exifImageHeight),
-  },
-  {label: 'Orientation', get: (e) => e?.orientation || '—'},
-  {label: 'Date taken', get: (e) => formatDatePart(e?.dateTimeOriginal)},
-  {label: 'Modified', get: (e) => formatDatePart(e?.modifyDate)},
-  {label: 'Time zone', get: (e) => e?.timeZone || '—'},
-  {label: 'City', get: (e) => e?.city || '—'},
-  {label: 'State', get: (e) => e?.state || '—'},
-  {label: 'Country', get: (e) => e?.country || '—'},
-  {
-    label: 'GPS',
-    get: (e) =>
-      e?.latitude != null && e.longitude != null
-        ? `${e.latitude.toFixed(5)}, ${e.longitude.toFixed(5)}`
-        : '—',
-  },
-  {label: 'Description', get: (e) => e?.description || '—'},
-]
+/** Filesystem tags that always differ between two copies — excluded so the
+ *  diff isn't drowned in red. Matched on the leaf name (after the last `:`). */
+const FILESYSTEM_TAG_LEAVES = new Set([
+  'FileName',
+  'Directory',
+  'FileModifyDate',
+  'FileAccessDate',
+  'FileInodeChangeDate',
+  'FilePermissions',
+])
+
+export function isFilesystemTag(key: string): boolean {
+  if (key === 'SourceFile') return true
+  const leaf = key.slice(key.lastIndexOf(':') + 1)
+  return FILESYSTEM_TAG_LEAVES.has(leaf)
+}
+
+/** Tone one EXIF row by comparing its cell values across columns (shared rule:
+ *  same → none, all-same-but-some-missing → green on present, differ → neutral
+ *  on present + red on missing). */
+export function exifTones(values: (string | null)[]): Tone[] {
+  return colTones('same', values.map(() => 0), [], values)
+}
+
+/** Build one row per EXIF tag from each column's exiftool tag map (in column
+ *  order; `undefined` for columns that failed to load). Keys are the union
+ *  across columns in first-seen order, minus filesystem-only tags. */
+export function buildExifRows(
+  tagMaps: (ExifTags | undefined)[],
+): ComparisonRow[] {
+  const keys: string[] = []
+  const seen = new Set<string>()
+  for (const tags of tagMaps) {
+    if (!tags) continue
+    for (const key of Object.keys(tags)) {
+      if (seen.has(key) || isFilesystemTag(key)) continue
+      seen.add(key)
+      keys.push(key)
+    }
+  }
+
+  return keys.map((key) => {
+    const values = tagMaps.map((tags) =>
+      tags && key in tags ? formatExifValue(tags[key]) : null,
+    )
+    const tones = exifTones(values)
+    return {
+      label: key,
+      cells: values.map((value, i) => ({
+        value: value || '—',
+        tone: tones[i],
+      })),
+    }
+  })
+}
 
 /* ── builder ── */
 
@@ -377,20 +408,6 @@ export function buildComparisonModel(
     }
   })
 
-  const exifRows: ComparisonRow[] = EXIF_FIELDS.map((field) => {
-    const refValue = field.get(assets[0]?.exifInfo)
-    return {
-      label: field.label,
-      cells: assets.map((a, i) => {
-        const value = field.get(a.exifInfo)
-        return {
-          value,
-          tone: i > 0 && value !== refValue ? 'neutral' : undefined,
-        }
-      }),
-    }
-  })
-
   const totalBytes = assets.reduce(
     (sum, a) => sum + (a.exifInfo?.fileSizeInByte ?? 0),
     0,
@@ -407,7 +424,6 @@ export function buildComparisonModel(
   return {
     columns,
     specRows,
-    exifRows,
     totalSize: formatBytes(totalBytes),
     matchPercent,
   }

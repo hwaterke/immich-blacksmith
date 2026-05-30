@@ -1,11 +1,14 @@
-import {Fragment, useState} from 'react'
+import {Fragment, useMemo, useState} from 'react'
+import {useQueries} from '@tanstack/react-query'
 import {ChevronRight, Pin, Sparkles, Trash2} from 'lucide-react'
 import {cn} from '../../lib/utils'
+import {buildExifRows} from '../../lib/assetComparison'
 import type {
   ComparisonCell,
   ComparisonColumn,
   ComparisonModel,
 } from '../../lib/assetComparison'
+import {loadExif} from '../../lib/exifLoader'
 import {CopyChip} from './CopyChip'
 import {PhotoActions} from './PhotoActions'
 
@@ -36,10 +39,27 @@ export function ComparisonTable({
   countSub = 'most similar group',
 }: Props) {
   const [exifOpen, setExifOpen] = useState(false)
-  const {columns, specRows, exifRows} = model
+  const {columns, specRows} = model
   const n = columns.length
   const gridTemplateColumns = `184px repeat(${n}, minmax(0,1fr))`
   const isLast = (i: number) => i === n - 1
+
+  // EXIF rows come from running exiftool on each image, lazy-loaded (per asset,
+  // sharing ExifSection's cache) when the section is expanded.
+  const exifQueries = useQueries({
+    queries: columns.map((col) => ({
+      queryKey: ['exif', col.assetId],
+      queryFn: () => loadExif({data: {assetId: col.assetId}}),
+      enabled: exifOpen,
+      staleTime: 5 * 60 * 1000,
+    })),
+  })
+  const exifLoading = exifOpen && exifQueries.some((q) => q.isLoading)
+  const tagMaps = exifQueries.map((q) =>
+    q.data && 'tags' in q.data ? q.data.tags : undefined,
+  )
+  const exifSignature = exifQueries.map((q) => q.dataUpdatedAt).join(',')
+  const exifRows = useMemo(() => buildExifRows(tagMaps), [exifSignature])
 
   return (
     <div className="cgrid mt-1 animate-rise" style={{gridTemplateColumns}}>
@@ -201,11 +221,24 @@ export function ComparisonTable({
         </span>
         <span className="et-title">All EXIF</span>
         <span className="et-sub">
-          {exifOpen ? 'hide' : 'show'} {exifRows.length} fields per image
+          {exifOpen
+            ? exifRows.length > 0
+              ? `hide ${exifRows.length} fields per image`
+              : 'hide'
+            : 'show all EXIF (exiftool)'}
         </span>
       </button>
-      {exifOpen
-        ? exifRows.map((row, ri) => {
+      {exifOpen ? (
+        exifLoading ? (
+          <div className="cg-exif col-span-full border-b-0 rounded-b-[11px] text-ink-3">
+            Reading metadata…
+          </div>
+        ) : exifRows.length === 0 ? (
+          <div className="cg-exif col-span-full border-b-0 rounded-b-[11px] text-ink-4">
+            No EXIF available
+          </div>
+        ) : (
+          exifRows.map((row, ri) => {
             const lastRow = ri === exifRows.length - 1
             return (
               <Fragment key={row.label}>
@@ -222,6 +255,7 @@ export function ComparisonTable({
                     key={columns[i].assetId}
                     className={cn(
                       'cg-exif',
+                      cell.tone && `cg-hl-${cell.tone}`,
                       isLast(i) && 'border-r-0',
                       lastRow && 'border-b-0',
                       lastRow && isLast(i) && 'rounded-br-[11px]',
@@ -235,7 +269,8 @@ export function ComparisonTable({
               </Fragment>
             )
           })
-        : null}
+        )
+      ) : null}
     </div>
   )
 }

@@ -1,6 +1,12 @@
 import type {AssetResponseDto, ExifResponseDto} from '@immich/sdk'
 import {describe, expect, it} from 'vitest'
-import {buildComparisonModel} from './assetComparison'
+import {
+  buildComparisonModel,
+  buildExifRows,
+  exifTones,
+  isFilesystemTag,
+} from './assetComparison'
+import type {ExifTags} from './exif'
 
 /* ── helpers ── */
 
@@ -60,7 +66,7 @@ describe('Date taken tone (same comparison)', () => {
     expect(tones(assets, 'Date taken')).toEqual(['best', undefined, 'best'])
   })
 
-  it('values differ → neutral on every column that has a value', () => {
+  it('values differ → neutral on present columns, red on the missing one', () => {
     const assets = [
       makeAsset({dateTimeOriginal: ref}),
       makeAsset({dateTimeOriginal: '2024-02-02T12:00:00+01:00'}),
@@ -69,7 +75,7 @@ describe('Date taken tone (same comparison)', () => {
     expect(tones(assets, 'Date taken')).toEqual([
       'neutral',
       'neutral',
-      undefined,
+      'worst',
     ])
   })
 
@@ -160,5 +166,94 @@ describe('buildComparisonModel aggregates', () => {
     const b = makeAsset({}, {id: 'drop-me'})
     const model = buildComparisonModel([a, b], {suggestedKeepIds: ['keep-me']})
     expect(model.columns.map((c) => c.isRecommended)).toEqual([true, false])
+  })
+})
+
+/* ── EXIF tone rule (shared with the "same" comparison) ── */
+
+describe('exifTones', () => {
+  it('all values the same → no tone', () => {
+    expect(exifTones(['A', 'A', 'A'])).toEqual([
+      undefined,
+      undefined,
+      undefined,
+    ])
+  })
+
+  it('all missing except one → green on the present one', () => {
+    expect(exifTones([null, 'A', null])).toEqual([undefined, 'best', undefined])
+  })
+
+  it('several share a value, one missing → green on the matches, missing untoned', () => {
+    expect(exifTones(['A', 'A', null])).toEqual(['best', 'best', undefined])
+  })
+
+  it('values differ → neutral on present, red on the missing', () => {
+    expect(exifTones(['A', 'B', null])).toEqual(['neutral', 'neutral', 'worst'])
+  })
+
+  it('all present but differ → neutral everywhere', () => {
+    expect(exifTones(['A', 'B', 'C'])).toEqual([
+      'neutral',
+      'neutral',
+      'neutral',
+    ])
+  })
+})
+
+describe('isFilesystemTag', () => {
+  it('flags SourceFile and filesystem path/date tags', () => {
+    expect(isFilesystemTag('SourceFile')).toBe(true)
+    expect(isFilesystemTag('File:System:FileName')).toBe(true)
+    expect(isFilesystemTag('File:System:Directory')).toBe(true)
+    expect(isFilesystemTag('File:System:FileModifyDate')).toBe(true)
+  })
+
+  it('keeps meaningful tags', () => {
+    expect(isFilesystemTag('EXIF:IFD0:Make')).toBe(false)
+    expect(isFilesystemTag('File:System:FileSize')).toBe(false)
+  })
+})
+
+describe('buildExifRows', () => {
+  it('builds the union of keys in first-seen order, excluding filesystem tags', () => {
+    const a: ExifTags = {
+      SourceFile: '/a.jpg',
+      'EXIF:IFD0:Make': 'Canon',
+      'EXIF:IFD0:Model': 'R5',
+    }
+    const b: ExifTags = {
+      SourceFile: '/b.jpg',
+      'EXIF:IFD0:Make': 'Canon',
+      'EXIF:Photo:ISO': 100,
+    }
+    const rows = buildExifRows([a, b])
+    expect(rows.map((r) => r.label)).toEqual([
+      'EXIF:IFD0:Make',
+      'EXIF:IFD0:Model',
+      'EXIF:Photo:ISO',
+    ])
+  })
+
+  it('renders missing values as "—" and tones each row by the shared rule', () => {
+    const a: ExifTags = {'EXIF:IFD0:Make': 'Canon', 'EXIF:Photo:ISO': 100}
+    const b: ExifTags = {'EXIF:IFD0:Make': 'Sony'}
+    const rows = buildExifRows([a, b])
+
+    const make = rows.find((r) => r.label === 'EXIF:IFD0:Make')!
+    expect(make.cells.map((c) => c.value)).toEqual(['Canon', 'Sony'])
+    expect(make.cells.map((c) => c.tone)).toEqual(['neutral', 'neutral'])
+
+    const iso = rows.find((r) => r.label === 'EXIF:Photo:ISO')!
+    expect(iso.cells.map((c) => c.value)).toEqual(['100', '—'])
+    expect(iso.cells.map((c) => c.tone)).toEqual(['best', undefined])
+  })
+
+  it('treats a column that failed to load (undefined) as all-missing', () => {
+    const a: ExifTags = {'EXIF:IFD0:Make': 'Canon'}
+    const rows = buildExifRows([a, undefined])
+    const make = rows[0]
+    expect(make.cells.map((c) => c.value)).toEqual(['Canon', '—'])
+    expect(make.cells.map((c) => c.tone)).toEqual(['best', undefined])
   })
 })
