@@ -88,6 +88,34 @@ export async function findSimilarAssetIds(
   return {sourceHasEmbedding: true, results}
 }
 
+/** Vector distance from a reference asset to each of the given asset ids.
+ *  Returns assetId → cosine distance (ids without an embedding are omitted). */
+export async function distancesFromReference(
+  referenceId: string,
+  otherIds: string[],
+): Promise<Record<string, number>> {
+  if (otherIds.length === 0) return {}
+
+  const reference = await db
+    .selectFrom('smart_search')
+    .select('embedding')
+    .where('assetId', '=', referenceId)
+    .executeTakeFirst()
+
+  if (!reference) return {}
+
+  const rows = await db
+    .selectFrom('smart_search')
+    .select([
+      'assetId',
+      sql<number>`embedding <=> ${reference.embedding}`.as('distance'),
+    ])
+    .where('assetId', 'in', otherIds)
+    .execute()
+
+  return Object.fromEntries(rows.map((r) => [r.assetId, r.distance]))
+}
+
 export function assetDistance(assetId1: string, assetId2: string) {
   const probes = 1
 

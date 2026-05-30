@@ -1,9 +1,10 @@
 import {createFileRoute, useNavigate} from '@tanstack/react-router'
 import {z} from 'zod'
-import {DuplicatesReview} from '../components/DuplicatesReview'
+import {ComparisonReview} from '../components/comparison/ComparisonReview'
 import {MaxDistanceForm} from '../components/MaxDistanceForm'
 import {loadDuplicatesFor} from '../lib/duplicateLoader'
 import type {DuplicatesData} from '../lib/duplicateLoader'
+import {buildSimilarSet} from '../lib/similarSet'
 
 const SearchSchema = z.object({
   maxDistance: z.coerce.number().positive().default(0.01).catch(0.01),
@@ -61,15 +62,37 @@ function ReviewSimilarPage() {
     </div>
   )
 
+  // Reference (the source) leads; matches follow in distance order.
+  const {assets, distances, missing} = buildSimilarSet(
+    data.source,
+    data.similars,
+  )
+
+  const empty = (
+    <div
+      className="rounded-[11px] border p-6"
+      style={{background: 'var(--surface)', borderColor: 'var(--border)'}}
+    >
+      <p className="kicker mb-2">No matches</p>
+      <p className="text-sm" style={{color: 'var(--ink-2)'}}>
+        {data.sourceHasEmbedding
+          ? `No assets matched within the ${data.maxDistance} distance threshold. Try increasing it.`
+          : 'The source asset has no embedding, so similar assets cannot be found.'}
+      </p>
+    </div>
+  )
+
   return (
-    <DuplicatesReview
+    <ComparisonReview
       key={data.id}
       header={header}
-      source={data.source}
-      sourceHasEmbedding={data.sourceHasEmbedding}
-      similars={data.similars}
-      maxDistance={data.maxDistance}
+      assets={assets}
+      distances={distances}
       immichWebUrl={data.immichWebUrl}
+      countLabel={`${assets.length} candidates`}
+      countSub="most similar"
+      missing={missing}
+      empty={empty}
     />
   )
 }

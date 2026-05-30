@@ -58,7 +58,10 @@ export function ExifSection({
           ) : tags ? (
             <div className="max-h-96 overflow-y-auto">
               {Object.entries(tags).map(([key, value]) => (
-                <div key={key} className="flex gap-2 py-0.5 text-xs leading-snug">
+                <div
+                  key={key}
+                  className="flex gap-2 py-0.5 text-xs leading-snug"
+                >
                   <span
                     className="w-40 shrink-0 truncate font-mono font-semibold"
                     style={{color: 'var(--text-faint)'}}

@@ -34,9 +34,7 @@ export async function readExif(containerPath: string): Promise<ExifTags> {
   } catch (err) {
     const e = err as NodeJS.ErrnoException & {stderr?: string}
     if (e.code === 'ENOENT') {
-      throw new Error(
-        'exiftool is not installed or not on PATH on the server',
-      )
+      throw new Error('exiftool is not installed or not on PATH on the server')
     }
     const detail = e.stderr?.trim() || e.message
     throw new Error(`exiftool failed: ${detail}`)

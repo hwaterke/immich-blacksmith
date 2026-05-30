@@ -1,10 +1,13 @@
-import {createFileRoute, Link} from '@tanstack/react-router'
-import {ChevronLeft, ChevronRight} from 'lucide-react'
-import {useEffect} from 'react'
+import {createFileRoute} from '@tanstack/react-router'
+import {useEffect, useMemo} from 'react'
 import {z} from 'zod'
-import {DuplicateAssetCard} from '../components/DuplicateAssetCard'
+import {ComparisonActionBar} from '../components/comparison/ComparisonActionBar'
+import {ComparisonHeader} from '../components/comparison/ComparisonHeader'
+import {ComparisonTable} from '../components/comparison/ComparisonTable'
+import {buildComparisonModel, formatBytes} from '../lib/assetComparison'
 import {loadDuplicateGroup} from '../lib/duplicateLoader'
 import type {DuplicateGroupResult} from '../lib/duplicateLoader'
+import {useFlagForDeletion} from '../lib/useFlagForDeletion'
 
 const SearchSchema = z.object({
   index: z.coerce.number().int().min(0).default(0).catch(0),
@@ -21,6 +24,9 @@ export const Route = createFileRoute('/review/duplicates')({
   },
   component: ReviewDuplicatesPage,
 })
+
+const RADIAL_BG =
+  'radial-gradient(130% 90% at 50% -10%, oklch(0.205 0.005 70) 0%, oklch(0.15 0.004 70) 60%)'
 
 function ReviewDuplicatesPage() {
   const data = Route.useLoaderData()
@@ -42,11 +48,16 @@ function ReviewDuplicatesPage() {
     }
   }, [requestedIndex, resolvedIndex, navigate])
 
-  // Arrow-key navigation
+  const goTo = useMemo(
+    () => (i: number) =>
+      navigate({to: '/review/duplicates', search: {index: i}}),
+    [navigate],
+  )
+
+  // Keyboard navigation: ← / → step groups, ⏎ advances.
   useEffect(() => {
     if (resolvedIndex == null || total == null) return
     function onKeyDown(e: KeyboardEvent) {
-      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return
       if (e.metaKey || e.ctrlKey || e.altKey) return
       const t = e.target as HTMLElement | null
       if (t) {
@@ -56,31 +67,25 @@ function ReviewDuplicatesPage() {
       }
       if (e.key === 'ArrowLeft' && resolvedIndex! > 0) {
         e.preventDefault()
-        navigate({
-          to: '/review/duplicates',
-          search: {index: resolvedIndex! - 1},
-        })
-      } else if (e.key === 'ArrowRight' && resolvedIndex! < total! - 1) {
+        goTo(resolvedIndex! - 1)
+      } else if (
+        (e.key === 'ArrowRight' || e.key === 'Enter') &&
+        resolvedIndex! < total! - 1
+      ) {
         e.preventDefault()
-        navigate({
-          to: '/review/duplicates',
-          search: {index: resolvedIndex! + 1},
-        })
+        goTo(resolvedIndex! + 1)
       }
     }
     window.addEventListener('keydown', onKeyDown)
     return () => window.removeEventListener('keydown', onKeyDown)
-  }, [resolvedIndex, total, navigate])
+  }, [resolvedIndex, total, goTo])
 
   if (data.kind === 'empty') {
     return (
       <main className="mx-auto w-full max-w-[1400px] px-4 py-12">
         <section
           className="rounded-lg border p-6"
-          style={{
-            background: 'var(--surface)',
-            borderColor: 'var(--border)',
-          }}
+          style={{background: 'var(--surface)', borderColor: 'var(--border)'}}
         >
           <p className="kicker mb-2">Review</p>
           <h1
@@ -98,138 +103,77 @@ function ReviewDuplicatesPage() {
     )
   }
 
-  const {index, total: count, group, immichWebUrl} = data
-  const hasPrev = index > 0
-  const hasNext = index < count - 1
-  const progress = ((index + 1) / count) * 100
-  const reference = group.assets[0]
-  const suggestedKeep = new Set(group.suggestedKeepAssetIds)
-
   return (
-    <main className="mx-auto w-full max-w-[1400px] px-4 py-6">
-      <section className="mb-6">
-        <div
-          className="mb-4 h-1 w-full overflow-hidden rounded-full"
-          style={{background: 'var(--surface-2)'}}
-          aria-label={`Progress: ${index + 1} of ${count}`}
-        >
-          <div
-            className="h-full rounded-full transition-all"
-            style={{width: `${progress}%`, background: 'var(--accent)'}}
-          />
-        </div>
-
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div className="min-w-0">
-            <p className="kicker mb-1">Review · duplicates</p>
-            <h1
-              className="text-2xl font-bold tracking-tight"
-              style={{color: 'var(--text)'}}
-            >
-              {index + 1}{' '}
-              <span style={{color: 'var(--text-faint)'}}>of {count}</span>
-            </h1>
-            <p
-              className="mt-1 break-all font-mono text-xs"
-              style={{color: 'var(--text-faint)'}}
-              title={group.duplicateId}
-            >
-              {group.duplicateId}
-            </p>
-          </div>
-
-          <nav
-            className="flex items-center gap-1.5"
-            aria-label="Review navigation"
-          >
-            <NavButton
-              to={index - 1}
-              disabled={!hasPrev}
-              label="Previous"
-              icon={<ChevronLeft size={16} />}
-            />
-            <NavButton
-              to={index + 1}
-              disabled={!hasNext}
-              label="Next"
-              icon={<ChevronRight size={16} />}
-              iconRight
-            />
-          </nav>
-        </div>
-        <p className="mt-2 text-xs" style={{color: 'var(--text-faint)'}}>
-          Tip: use ← / → arrow keys to navigate.
-        </p>
-      </section>
-
-      <div
-        key={group.duplicateId}
-        className="-mx-4 overflow-x-auto px-4 pb-6"
-        style={{scrollSnapType: 'x mandatory'}}
-      >
-        <div className="flex gap-4">
-          {group.assets.map((asset, i) => (
-            <DuplicateAssetCard
-              key={asset.id}
-              id={asset.id}
-              originalPath={asset.originalPath}
-              asset={asset}
-              reference={i === 0 ? undefined : reference}
-              label={
-                suggestedKeep.has(asset.id)
-                  ? `Asset ${i + 1} · suggested keep`
-                  : `Asset ${i + 1}`
-              }
-              immichWebUrl={immichWebUrl}
-            />
-          ))}
-        </div>
-      </div>
-    </main>
+    <DuplicateGroupScreen
+      key={data.group.duplicateId}
+      data={data}
+      onGoTo={goTo}
+    />
   )
 }
 
-interface NavButtonProps {
-  to: number
-  disabled: boolean
-  label: string
-  icon: React.ReactNode
-  iconRight?: boolean
+interface ScreenProps {
+  data: Extract<DuplicateGroupResult, {kind: 'loaded'}> & {
+    requestedIndex: number
+  }
+  onGoTo: (index: number) => void
 }
 
-function NavButton({to, disabled, label, icon, iconRight}: NavButtonProps) {
-  const enabledStyle = {
-    background: 'var(--accent)',
-    color: 'var(--accent-fg)',
-  }
-  const disabledStyle = {
-    background: 'var(--surface-2)',
-    color: 'var(--text-faint)',
-    cursor: 'not-allowed' as const,
-  }
-  const className =
-    'inline-flex items-center gap-1 rounded-md px-3 py-2 text-sm font-semibold transition'
+function DuplicateGroupScreen({data, onGoTo}: ScreenProps) {
+  const {index, total, group, referenceDistances, immichWebUrl} = data
+  const {flaggedIds, flag} = useFlagForDeletion()
 
-  if (disabled) {
-    return (
-      <span className={className} style={disabledStyle} aria-disabled="true">
-        {!iconRight && icon}
-        {label}
-        {iconRight && icon}
-      </span>
-    )
-  }
+  const model = useMemo(
+    () =>
+      buildComparisonModel(group.assets, {
+        distances: referenceDistances,
+        suggestedKeepIds: group.suggestedKeepAssetIds,
+        immichWebUrl,
+      }),
+    [group, referenceDistances, immichWebUrl],
+  )
+
+  const deleting = flaggedIds.size
+  const keeping = group.assets.length - deleting
+  const freedBytes = group.assets
+    .filter((a) => flaggedIds.has(a.id))
+    .reduce((sum, a) => sum + (a.exifInfo?.fileSizeInByte ?? 0), 0)
+  const summary = `Keeping ${keeping} · deleting ${deleting}${
+    freedBytes > 0 ? ` · frees ${formatBytes(freedBytes)}` : ''
+  }`
+
+  const hasNext = index < total - 1
 
   return (
-    <Link
-      to="/review/duplicates"
-      search={{index: to}}
-      className={className}
-      style={enabledStyle}
+    <div
+      className="flex flex-col"
+      style={{height: 'calc(100vh - 54px)', background: RADIAL_BG}}
     >
-      {!iconRight && icon}
-      {label}
-      {iconRight && icon}
-    </Link>
+      <ComparisonHeader
+        title={`Duplicate group ${index + 1} of ${total}`}
+        subtitle={group.duplicateId}
+        photoCount={group.assets.length}
+        totalSize={model.totalSize}
+        matchPercent={model.matchPercent}
+      />
+
+      <div className="flex-1 overflow-auto px-[26px] pb-[22px]">
+        <ComparisonTable
+          model={model}
+          flaggedIds={flaggedIds}
+          onFlag={flag}
+          countLabel={`${group.assets.length} candidates`}
+          countSub="duplicate group"
+        />
+      </div>
+
+      <ComparisonActionBar
+        summary={summary}
+        applyLabel={hasNext ? 'Apply & next' : 'Done'}
+        onApply={() => hasNext && onGoTo(index + 1)}
+        onSkip={hasNext ? () => onGoTo(index + 1) : undefined}
+        applyDisabled={!hasNext}
+      />
+    </div>
   )
 }

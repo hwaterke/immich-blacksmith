@@ -2,10 +2,11 @@ import {createFileRoute, Link} from '@tanstack/react-router'
 import {ChevronLeft, ChevronRight} from 'lucide-react'
 import {useEffect} from 'react'
 import {z} from 'zod'
-import {DuplicatesReview} from '../components/DuplicatesReview'
+import {ComparisonReview} from '../components/comparison/ComparisonReview'
 import {MaxDistanceForm} from '../components/MaxDistanceForm'
 import type {AssetResult, SimilarResult} from '../lib/duplicateLoader'
 import {getNikonLowResList, loadDuplicatesFor} from '../lib/duplicateLoader'
+import {buildSimilarSet} from '../lib/similarSet'
 
 const SearchSchema = z.object({
   index: z.coerce.number().int().min(0).default(0).catch(0),
@@ -152,6 +153,7 @@ function ReviewNikonLowResPage() {
     sourceHasEmbedding,
     immichWebUrl,
   } = data
+  const {assets, distances, missing} = buildSimilarSet(source, similars)
   const hasPrev = index > 0
   const hasNext = index < data.total - 1
   const progress = ((index + 1) / data.total) * 100
@@ -226,15 +228,31 @@ function ReviewNikonLowResPage() {
     </div>
   )
 
+  const empty = (
+    <div
+      className="rounded-[11px] border p-6"
+      style={{background: 'var(--surface)', borderColor: 'var(--border)'}}
+    >
+      <p className="kicker mb-2">No matches</p>
+      <p className="text-sm" style={{color: 'var(--ink-2)'}}>
+        {sourceHasEmbedding
+          ? `No assets matched within the ${data.maxDistance} distance threshold. Try increasing it.`
+          : 'This asset has no embedding, so similar assets cannot be found.'}
+      </p>
+    </div>
+  )
+
   return (
-    <DuplicatesReview
+    <ComparisonReview
       key={source.id}
       header={header}
-      source={source}
-      sourceHasEmbedding={sourceHasEmbedding}
-      similars={similars}
-      maxDistance={data.maxDistance}
+      assets={assets}
+      distances={distances}
       immichWebUrl={immichWebUrl}
+      countLabel={`${assets.length} candidates`}
+      countSub="nikon low-res"
+      missing={missing}
+      empty={empty}
     />
   )
 }

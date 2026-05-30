@@ -40,6 +40,8 @@ export type DuplicateGroupResult =
       total: number
       index: number
       group: DuplicateGroup
+      /** assetId → vector distance to the group's reference (assets[0]). */
+      referenceDistances: Record<string, number>
       immichWebUrl: string
     }
 
@@ -120,6 +122,7 @@ export const loadDuplicateGroup = createServerFn({method: 'GET'})
   .inputValidator((data: {index: number}) => data)
   .handler(async ({data}): Promise<DuplicateGroupResult> => {
     const {ensureImmichInit, getImmichWebUrl} = await import('./immich')
+    const {distancesFromReference} = await import('./assetQueries')
     const {getAssetDuplicates} = await import('@immich/sdk')
 
     ensureImmichInit()
@@ -131,6 +134,15 @@ export const loadDuplicateGroup = createServerFn({method: 'GET'})
     const index = Math.min(Math.max(data.index, 0), groups.length - 1)
     const group = groups[index]
 
+    const [reference, ...rest] = group.assets
+    const referenceDistances =
+      group.assets.length > 0
+        ? await distancesFromReference(
+            reference.id,
+            rest.map((a) => a.id),
+          )
+        : {}
+
     return {
       kind: 'loaded',
       total: groups.length,
@@ -140,6 +152,7 @@ export const loadDuplicateGroup = createServerFn({method: 'GET'})
         assets: group.assets,
         suggestedKeepAssetIds: group.suggestedKeepAssetIds,
       },
+      referenceDistances,
       immichWebUrl: getImmichWebUrl(),
     }
   })
