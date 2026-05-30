@@ -179,10 +179,29 @@ export function rankFmt(ext: string): number {
 /* ── tone computation (mirrors the design's colTones) ──
    'max'/'min' rank columns and flag the best & worst extremes;
    'diff' flags columns whose value differs from the reference (col 0). */
-type Cmp = 'max' | 'min' | 'diff'
+type Cmp = 'max' | 'min' | 'diff' | 'same'
 
-function colTones(cmp: Cmp, keys: number[], refMatches: boolean[]): Tone[] {
+function colTones(
+  cmp: Cmp,
+  keys: number[],
+  refMatches: boolean[],
+  idents: (string | null)[],
+): Tone[] {
   const tones: Tone[] = keys.map(() => undefined as unknown as Tone)
+  if (cmp === 'same') {
+    const present = idents.map((v) => v != null && v !== '')
+    const presentValues = idents.filter((_, i) => present[i]) as string[]
+    const allSame = presentValues.every((v) => v === presentValues[0])
+    const anyMissing = present.some((p) => !p)
+    present.forEach((isPresent, i) => {
+      if (!isPresent) return // missing → never toned
+      if (!allSame)
+        tones[i] = 'neutral' // values differ → neutral
+      else if (anyMissing) tones[i] = 'best' // same but some missing → green
+      // all present & all same → leave untoned
+    })
+    return tones
+  }
   if (cmp === 'diff') {
     refMatches.forEach((matchesRef, i) => {
       if (!matchesRef) tones[i] = 'neutral'
@@ -244,11 +263,9 @@ const SPECS: SpecDef[] = [
   },
   {
     label: 'Date taken',
-    cmp: 'min',
-    key: (a) => {
-      const d = asDate(a.exifInfo?.dateTimeOriginal ?? a.localDateTime)
-      return d ? d.getTime() : Number.MAX_SAFE_INTEGER
-    },
+    cmp: 'same',
+    key: () => 0,
+    ident: (a) => a.exifInfo?.dateTimeOriginal ?? a.localDateTime ?? '',
     value: (a) =>
       formatDatePart(a.exifInfo?.dateTimeOriginal ?? a.localDateTime),
     sub: (a) => formatTimePart(a.exifInfo?.dateTimeOriginal ?? a.localDateTime),
@@ -345,11 +362,11 @@ export function buildComparisonModel(
 
   const specRows: ComparisonRow[] = SPECS.map((spec) => {
     const keys = assets.map(spec.key)
-    const refIdent = spec.ident ? spec.ident(assets[0]) : null
+    const idents = assets.map((a) => (spec.ident ? spec.ident(a) : null))
     const refMatches = assets.map((a) =>
-      spec.ident ? spec.ident(a) === refIdent : true,
+      spec.ident ? spec.ident(a) === idents[0] : true,
     )
-    const tones = colTones(spec.cmp, keys, refMatches)
+    const tones = colTones(spec.cmp, keys, refMatches, idents)
     return {
       label: spec.label,
       cells: assets.map((a, i) => ({
