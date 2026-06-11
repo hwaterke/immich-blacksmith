@@ -1,3 +1,9 @@
 [tools]
 node = "24"
 pnpm = "latest"
+
+[hooks]
+postinstall = "npx corepack enable pnpm && npx corepack use pnpm@latest"
+
+[settings]
+experimental = true
