@@ -328,7 +328,12 @@ export function isFilesystemTag(key: string): boolean {
  *  same → none, all-same-but-some-missing → green on present, differ → neutral
  *  on present + red on missing). */
 export function exifTones(values: (string | null)[]): Tone[] {
-  return colTones('same', values.map(() => 0), [], values)
+  return colTones(
+    'same',
+    values.map(() => 0),
+    [],
+    values,
+  )
 }
 
 /** Build one row per EXIF tag from each column's exiftool tag map (in column

@@ -72,11 +72,7 @@ describe('Date taken tone (same comparison)', () => {
       makeAsset({dateTimeOriginal: '2024-02-02T12:00:00+01:00'}),
       makeAsset({dateTimeOriginal: null}),
     ]
-    expect(tones(assets, 'Date taken')).toEqual([
-      'neutral',
-      'neutral',
-      'worst',
-    ])
+    expect(tones(assets, 'Date taken')).toEqual(['neutral', 'neutral', 'worst'])
   })
 
   it('compares the raw timestamp string: same instant, different tz → different', () => {
