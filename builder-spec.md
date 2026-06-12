@@ -274,6 +274,47 @@ types from searchTypes.ts.
     combinator walk (§2) + `collectFields`, then relations/derived (§5–§6),
     then assembly/sort/enrichment (§1, §7, §8), then tests.
 
+- **2026-06-12 — search.ts slice 1: full filter-expression layer (§2–§6) done.**
+  - `src/lib/server/search.ts` now has: translators (`equalityOps`/`dateOps`/
+    `patternOps`/`unaccentPatternOps`), checksum decode, `filePathRef` scalar
+    subquery (§4, via `$asScalar()`), `relationOps` EXISTS shapes for
+    albums/people/tags (§5), ownerIds degeneration, derived bools + ocr with
+    verbatim `tokenizeForSearch` port (§6), exhaustive `fieldBuilders`
+    registry (mapped type over `keyof Filter` — new schema fields fail
+    compile), `buildCombined` (§2), `collectFields` + exported
+    `exifFilterFields`. `searchAssets` is a throwing stub until assembly.
+  - Verified: `pnpm typecheck` (stub error gone; only the two known
+    pre-existing files fail), `pnpm test` 75 passed, plus a throwaway compile
+    smoke (deleted, not committed) checking compiled SQL: nested or/not
+    parens, EXISTS shapes incl. grouped distinct-count `all`, `%>>` with CJK
+    bigram tokens, `f_unaccent … ilike` with escaped wildcards, checksum
+    Buffer param, `ownerIds.all` >1 → constant false, status injection,
+    empty filter → `1 = 1`.
+  - Two flagged additions on top of the spec: (1) file-path scalar
+    subqueries pin `isEdited = false` (see Gotchas — uniqueness is per
+    (assetId, type, isEdited)); (2) personIds `exists: true` also requires
+    `personId is not null`, since a detected-but-unrecognized face shouldn't
+    count as "linked to at least one person".
+  - Remaining of the implementation step: query assembly (§1, §7, §8, §9) —
+    `buildSearchQuery` + `searchAssets` (vchord transaction, sort,
+    pagination, enrichment). Then tests (Verification 2), live smoke (3).
+
+## Gotchas
+
+- `asset_file` uniqueness is `(assetId, type, isEdited)` (live-DB index
+  `asset_file_assetId_type_isEdited_uq`), not `(assetId, type)` — a §4 scalar
+  subquery without an `isEdited = false` predicate can return two rows once
+  edited files exist and would error at runtime. Today's data is 100%
+  `isEdited = false`, so this never shows up in smoke tests.
+- Kysely compiles `eb.and([])` to `1 = 1` and `eb.or([])` to `1 = 0` — empty
+  filter objects / combinator arrays already behave correctly, no guards
+  needed.
+- TS cannot resolve Kysely's operand conditional types for an unbound generic
+  `T`; the `as never` casts live inside `equalityOps` only, call sites stay
+  fully typed.
+- zod v4's `z.uuid()` validates version/variant nibbles — test fixtures need
+  RFC-shaped UUIDs (e.g. `…-4111-8111-…`), not arbitrary hex.
+
 ## Documented behaviors (comments in code, not new decisions)
 
 - SQL three-valued logic under `not`/`ne` on nullable columns (exif fields,
