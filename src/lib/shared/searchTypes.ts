@@ -1,8 +1,61 @@
 import {z} from 'zod'
 
+const idFilterSchema = z.object({
+  eq: z.uuid().optional().describe('Equals a specific ID'),
+  ne: z.uuid().optional().describe('Not equal to a specific ID'),
+})
+
+const idsFilterSchema = z.object({
+  any: z.array(z.uuid()).min(1).optional().describe('In a list of IDs'),
+  all: z.array(z.uuid()).min(1).optional().describe('In a list of IDs'),
+  none: z.array(z.uuid()).min(1).optional().describe('Not in a list of IDs'),
+})
+
+const stringPatternFilterSchema = z.object({
+  eq: z.string().trim().optional().describe('Equals a specific string'),
+  ne: z.string().trim().optional().describe('Not equal to a specific string'),
+  any: z
+    .array(z.string().trim())
+    .min(1)
+    .optional()
+    .describe('In a list of strings'),
+  none: z
+    .array(z.string().trim())
+    .min(1)
+    .optional()
+    .describe('Not in a list of strings'),
+  contains: z
+    .string()
+    .trim()
+    .min(1)
+    .optional()
+    .describe('Contains a substring'),
+  startsWith: z
+    .string()
+    .trim()
+    .min(1)
+    .optional()
+    .describe('Starts with a substring'),
+  endsWith: z
+    .string()
+    .trim()
+    .min(1)
+    .optional()
+    .describe('Ends with a substring'),
+})
+
+const dateFilterSchema = z.object({
+  eq: z.coerce.date().optional().describe('Equals a specific date'),
+  ne: z.coerce.date().optional().describe('Not equal to a specific date'),
+  gt: z.coerce.date().optional().describe('After a specific date'),
+  lt: z.coerce.date().optional().describe('Before a specific date'),
+  gte: z.coerce.date().optional().describe('On or after a specific date'),
+  lte: z.coerce.date().optional().describe('On or before a specific date'),
+})
+
 export const filterSchema = z.strictObject({
-  id: z.uuid().optional().describe('Filter by asset ID'),
-  libraryId: z.uuid().optional().describe('Filter by library ID'),
+  id: idFilterSchema.optional().describe('Filter by asset ID'),
+  libraryId: idFilterSchema.optional().describe('Filter by library ID'),
   isEncoded: z.boolean().optional().describe('Filter by encoded status'),
   isFavorite: z.boolean().optional().describe('Filter by favorite status'),
   isMotion: z.boolean().optional().describe('Filter by motion photo status'),
