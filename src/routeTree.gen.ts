@@ -22,8 +22,12 @@ import { Route as ReviewCompareIndexRouteImport } from './routes/review.compare.
 import { Route as ReviewSimilarIdRouteImport } from './routes/review.similar.$id'
 import { Route as ApiThumbnailIdRouteImport } from './routes/api.thumbnail.$id'
 import { Route as ApiSimilarIdRouteImport } from './routes/api.similar.$id'
+import { Route as ApiComfyuiWorkflowsRouteImport } from './routes/api.comfyui.workflows'
+import { Route as ApiComfyuiJobsRouteImport } from './routes/api.comfyui.jobs'
+import { Route as ApiComfyuiGenerateRouteImport } from './routes/api.comfyui.generate'
 import { Route as ReviewCompareId1Id2RouteImport } from './routes/review.compare.$id1.$id2'
 import { Route as ApiTryIdId2RouteImport } from './routes/api.try.$id.$id2'
+import { Route as ApiComfyuiJobsJobIdRouteImport } from './routes/api.comfyui.jobs.$jobId'
 
 const SanityCheckRoute = SanityCheckRouteImport.update({
   id: '/sanity-check',
@@ -90,6 +94,21 @@ const ApiSimilarIdRoute = ApiSimilarIdRouteImport.update({
   path: '/api/similar/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiComfyuiWorkflowsRoute = ApiComfyuiWorkflowsRouteImport.update({
+  id: '/api/comfyui/workflows',
+  path: '/api/comfyui/workflows',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiComfyuiJobsRoute = ApiComfyuiJobsRouteImport.update({
+  id: '/api/comfyui/jobs',
+  path: '/api/comfyui/jobs',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiComfyuiGenerateRoute = ApiComfyuiGenerateRouteImport.update({
+  id: '/api/comfyui/generate',
+  path: '/api/comfyui/generate',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReviewCompareId1Id2Route = ReviewCompareId1Id2RouteImport.update({
   id: '/review/compare/$id1/$id2',
   path: '/review/compare/$id1/$id2',
@@ -99,6 +118,11 @@ const ApiTryIdId2Route = ApiTryIdId2RouteImport.update({
   id: '/api/try/$id/$id2',
   path: '/api/try/$id/$id2',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiComfyuiJobsJobIdRoute = ApiComfyuiJobsJobIdRouteImport.update({
+  id: '/$jobId',
+  path: '/$jobId',
+  getParentRoute: () => ApiComfyuiJobsRoute,
 } as any)
 
 export interface FileRoutesByFullPath {
@@ -110,11 +134,15 @@ export interface FileRoutesByFullPath {
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
+  '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
+  '/api/comfyui/jobs': typeof ApiComfyuiJobsRouteWithChildren
+  '/api/comfyui/workflows': typeof ApiComfyuiWorkflowsRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
   '/review/compare/': typeof ReviewCompareIndexRoute
   '/review/similar/': typeof ReviewSimilarIndexRoute
+  '/api/comfyui/jobs/$jobId': typeof ApiComfyuiJobsJobIdRoute
   '/api/try/$id/$id2': typeof ApiTryIdId2Route
   '/review/compare/$id1/$id2': typeof ReviewCompareId1Id2Route
 }
@@ -127,11 +155,15 @@ export interface FileRoutesByTo {
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
+  '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
+  '/api/comfyui/jobs': typeof ApiComfyuiJobsRouteWithChildren
+  '/api/comfyui/workflows': typeof ApiComfyuiWorkflowsRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
   '/review/compare': typeof ReviewCompareIndexRoute
   '/review/similar': typeof ReviewSimilarIndexRoute
+  '/api/comfyui/jobs/$jobId': typeof ApiComfyuiJobsJobIdRoute
   '/api/try/$id/$id2': typeof ApiTryIdId2Route
   '/review/compare/$id1/$id2': typeof ReviewCompareId1Id2Route
 }
@@ -145,11 +177,15 @@ export interface FileRoutesById {
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
+  '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
+  '/api/comfyui/jobs': typeof ApiComfyuiJobsRouteWithChildren
+  '/api/comfyui/workflows': typeof ApiComfyuiWorkflowsRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
   '/review/compare/': typeof ReviewCompareIndexRoute
   '/review/similar/': typeof ReviewSimilarIndexRoute
+  '/api/comfyui/jobs/$jobId': typeof ApiComfyuiJobsJobIdRoute
   '/api/try/$id/$id2': typeof ApiTryIdId2Route
   '/review/compare/$id1/$id2': typeof ReviewCompareId1Id2Route
 }
@@ -164,11 +200,15 @@ export interface FileRouteTypes {
     | '/api/nikon-low-res'
     | '/review/duplicates'
     | '/review/nikon-low-res'
+    | '/api/comfyui/generate'
+    | '/api/comfyui/jobs'
+    | '/api/comfyui/workflows'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
     | '/review/similar/$id'
     | '/review/compare/'
     | '/review/similar/'
+    | '/api/comfyui/jobs/$jobId'
     | '/api/try/$id/$id2'
     | '/review/compare/$id1/$id2'
   fileRoutesByTo: FileRoutesByTo
@@ -181,11 +221,15 @@ export interface FileRouteTypes {
     | '/api/nikon-low-res'
     | '/review/duplicates'
     | '/review/nikon-low-res'
+    | '/api/comfyui/generate'
+    | '/api/comfyui/jobs'
+    | '/api/comfyui/workflows'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
     | '/review/similar/$id'
     | '/review/compare'
     | '/review/similar'
+    | '/api/comfyui/jobs/$jobId'
     | '/api/try/$id/$id2'
     | '/review/compare/$id1/$id2'
   id:
@@ -198,11 +242,15 @@ export interface FileRouteTypes {
     | '/api/nikon-low-res'
     | '/review/duplicates'
     | '/review/nikon-low-res'
+    | '/api/comfyui/generate'
+    | '/api/comfyui/jobs'
+    | '/api/comfyui/workflows'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
     | '/review/similar/$id'
     | '/review/compare/'
     | '/review/similar/'
+    | '/api/comfyui/jobs/$jobId'
     | '/api/try/$id/$id2'
     | '/review/compare/$id1/$id2'
   fileRoutesById: FileRoutesById
@@ -216,6 +264,9 @@ export interface RootRouteChildren {
   ApiNikonLowResRoute: typeof ApiNikonLowResRoute
   ReviewDuplicatesRoute: typeof ReviewDuplicatesRoute
   ReviewNikonLowResRoute: typeof ReviewNikonLowResRoute
+  ApiComfyuiGenerateRoute: typeof ApiComfyuiGenerateRoute
+  ApiComfyuiJobsRoute: typeof ApiComfyuiJobsRouteWithChildren
+  ApiComfyuiWorkflowsRoute: typeof ApiComfyuiWorkflowsRoute
   ApiSimilarIdRoute: typeof ApiSimilarIdRoute
   ApiThumbnailIdRoute: typeof ApiThumbnailIdRoute
   ReviewSimilarIdRoute: typeof ReviewSimilarIdRoute
@@ -318,6 +369,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSimilarIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/comfyui/workflows': {
+      id: '/api/comfyui/workflows'
+      path: '/api/comfyui/workflows'
+      fullPath: '/api/comfyui/workflows'
+      preLoaderRoute: typeof ApiComfyuiWorkflowsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/comfyui/jobs': {
+      id: '/api/comfyui/jobs'
+      path: '/api/comfyui/jobs'
+      fullPath: '/api/comfyui/jobs'
+      preLoaderRoute: typeof ApiComfyuiJobsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/comfyui/generate': {
+      id: '/api/comfyui/generate'
+      path: '/api/comfyui/generate'
+      fullPath: '/api/comfyui/generate'
+      preLoaderRoute: typeof ApiComfyuiGenerateRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/review/compare/$id1/$id2': {
       id: '/review/compare/$id1/$id2'
       path: '/review/compare/$id1/$id2'
@@ -332,8 +404,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTryIdId2RouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/comfyui/jobs/$jobId': {
+      id: '/api/comfyui/jobs/$jobId'
+      path: '/$jobId'
+      fullPath: '/api/comfyui/jobs/$jobId'
+      preLoaderRoute: typeof ApiComfyuiJobsJobIdRouteImport
+      parentRoute: typeof ApiComfyuiJobsRoute
+    }
   }
 }
+
+interface ApiComfyuiJobsRouteChildren {
+  ApiComfyuiJobsJobIdRoute: typeof ApiComfyuiJobsJobIdRoute
+}
+
+const ApiComfyuiJobsRouteChildren: ApiComfyuiJobsRouteChildren = {
+  ApiComfyuiJobsJobIdRoute: ApiComfyuiJobsJobIdRoute,
+}
+
+const ApiComfyuiJobsRouteWithChildren = ApiComfyuiJobsRoute._addFileChildren(
+  ApiComfyuiJobsRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -344,6 +435,9 @@ const rootRouteChildren: RootRouteChildren = {
   ApiNikonLowResRoute: ApiNikonLowResRoute,
   ReviewDuplicatesRoute: ReviewDuplicatesRoute,
   ReviewNikonLowResRoute: ReviewNikonLowResRoute,
+  ApiComfyuiGenerateRoute: ApiComfyuiGenerateRoute,
+  ApiComfyuiJobsRoute: ApiComfyuiJobsRouteWithChildren,
+  ApiComfyuiWorkflowsRoute: ApiComfyuiWorkflowsRoute,
   ApiSimilarIdRoute: ApiSimilarIdRoute,
   ApiThumbnailIdRoute: ApiThumbnailIdRoute,
   ReviewSimilarIdRoute: ReviewSimilarIdRoute,

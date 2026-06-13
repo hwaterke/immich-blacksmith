@@ -57,14 +57,12 @@ describe('getQueryEmbedding (text path)', () => {
   it('fails on non-OK responses', async () => {
     vi.stubGlobal(
       'fetch',
-      vi
-        .fn()
-        .mockResolvedValue(
-          new Response('boom', {
-            status: 500,
-            statusText: 'Internal Server Error',
-          }),
-        ),
+      vi.fn().mockResolvedValue(
+        new Response('boom', {
+          status: 500,
+          statusText: 'Internal Server Error',
+        }),
+      ),
     )
     await expect(getQueryEmbedding({text: 'horses'})).rejects.toThrow('500')
   })
