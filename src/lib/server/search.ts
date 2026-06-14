@@ -1,9 +1,20 @@
 import '@tanstack/react-start/server-only'
 import {Buffer} from 'node:buffer'
 import {sql} from 'kysely'
-import type {Expression, ExpressionBuilder, RawBuilder, SqlBool} from 'kysely'
+import type {
+  Expression,
+  ExpressionBuilder,
+  Kysely,
+  OrderByItemBuilder,
+  RawBuilder,
+  SelectQueryBuilder,
+  SqlBool,
+} from 'kysely'
+import {jsonArrayFrom, jsonObjectFrom} from 'kysely/helpers/postgres'
+import {db} from '../../db'
 import type {DB} from '../../db.d'
 import type {CombinedFilter, Filter, SearchParams} from '../shared/searchTypes'
+import {getQueryEmbedding} from './embedding'
 
 /**
  * Expression-builder context for filter predicates: `asset` is always in
@@ -528,7 +539,250 @@ export const collectFields = (filter: CombinedFilter): Set<keyof Filter> => {
   return fields
 }
 
-/** Query assembly (§1, §7, §8 of builder-spec.md) lands in the next step. */
-export function searchAssets(_params: SearchParams): never {
-  throw new Error('searchAssets is not implemented yet')
+/** Sort fields that map straight to an `asset.<col>` order-by reference. */
+const assetSortColumns = {
+  fileCreatedAt: 'asset.fileCreatedAt',
+  fileModifiedAt: 'asset.fileModifiedAt',
+  createdAt: 'asset.createdAt',
+  updatedAt: 'asset.updatedAt',
+  localDateTime: 'asset.localDateTime',
+  originalFileName: 'asset.originalFileName',
+} as const
+
+/**
+ * Whether the query needs the asset_exif left join: a filter references an
+ * exif field, the sort is takenAt/fileSize, or `exif` enrichment was asked
+ * for. Drives both the physical join and the SearchEB cast below.
+ */
+const needsExifJoin = (params: SearchParams): boolean => {
+  if (params.sort.field === 'takenAt' || params.sort.field === 'fileSize') {
+    return true
+  }
+  if (params.joins.includes('exif')) {
+    return true
+  }
+  for (const field of collectFields(params.filters)) {
+    if (exifFilterFields.has(field)) {
+      return true
+    }
+  }
+  return false
+}
+
+/** Recognized, visible people on the asset, de-duplicated by person id. */
+const peopleJson = (eb: SearchEB) =>
+  jsonArrayFrom(
+    eb
+      .selectFrom('asset_face')
+      .innerJoin('person', 'person.id', 'asset_face.personId')
+      .whereRef('asset_face.assetId', '=', 'asset.id')
+      .where('asset_face.deletedAt', 'is', null)
+      .where('asset_face.isVisible', '=', true)
+      .distinctOn('person.id')
+      .selectAll('person'),
+  )
+
+/** The stack the asset belongs to, or null when it is unstacked. */
+const stackJson = (eb: SearchEB) =>
+  jsonObjectFrom(
+    eb
+      .selectFrom('stack')
+      .whereRef('stack.id', '=', 'asset.stackId')
+      .selectAll('stack'),
+  )
+
+/** Albums the asset is a member of. */
+const albumsJson = (eb: SearchEB) =>
+  jsonArrayFrom(
+    eb
+      .selectFrom('album_asset')
+      .innerJoin('album', 'album.id', 'album_asset.albumId')
+      .whereRef('album_asset.assetId', '=', 'asset.id')
+      .selectAll('album'),
+  )
+
+/** The owning user. Columns are listed explicitly because the user table also
+ *  holds password/pinCode — never selectAll here. */
+const ownerJson = (eb: SearchEB) =>
+  jsonObjectFrom(
+    eb
+      .selectFrom('user')
+      .whereRef('user.id', '=', 'asset.ownerId')
+      .select([
+        'user.id',
+        'user.name',
+        'user.email',
+        'user.avatarColor',
+        'user.profileImagePath',
+      ]),
+  )
+
+/**
+ * Applies the resolved sort plus a stable secondary `asset.id` order. Generic
+ * over the output type so it composes after the enrichment selects without
+ * widening it.
+ */
+const applySort = <O>(
+  query: SelectQueryBuilder<DB, 'asset' | 'asset_exif', O>,
+  params: SearchParams,
+  distanceExpr: RawBuilder<number> | undefined,
+): SelectQueryBuilder<DB, 'asset' | 'asset_exif', O> => {
+  const {field, direction} = params.sort
+
+  // random() ordering is not stable across pages (documented limitation).
+  if (field === 'random') {
+    return query.orderBy(sql`random()`)
+  }
+
+  const directed = (ob: OrderByItemBuilder) =>
+    direction === 'asc' ? ob.asc() : ob.desc()
+  // takenAt / fileSize are nullable: keep NULLs last regardless of direction.
+  const directedNullsLast = (ob: OrderByItemBuilder) => directed(ob).nullsLast()
+
+  const ordered =
+    field === 'distance'
+      ? // The schema guarantees a query (hence distanceExpr) for distance sort.
+        query.orderBy(distanceExpr as RawBuilder<number>, directed)
+      : field === 'takenAt'
+        ? query.orderBy('asset_exif.dateTimeOriginal', directedNullsLast)
+        : field === 'fileSize'
+          ? query.orderBy('asset_exif.fileSizeInByte', directedNullsLast)
+          : query.orderBy(assetSortColumns[field], directed)
+
+  return ordered.orderBy('asset.id')
+}
+
+/**
+ * Assembles the full select query (no execution) so it can be unit-tested via
+ * `.compile()`. The executor is `db` or a transaction; the smart_search
+ * distance, exif join, filters, enrichment, sort and pagination are all driven
+ * by `params` (§1, §7, §8 of builder-spec.md).
+ */
+export const buildSearchQuery = (
+  executor: Kysely<DB>,
+  params: SearchParams,
+  embedding?: string,
+) => {
+  const distanceExpr =
+    embedding === undefined
+      ? undefined
+      : sql<number>`smart_search.embedding <=> ${embedding}`
+
+  // Lazy asset_exif left join (1:1 on the PK, so it filters nothing). The cast
+  // widens the scope to asset_exif for the filter/sort/enrichment code; it is
+  // sound because needsExifJoin gates both the physical join and every
+  // reference to an asset_exif column.
+  const base = executor
+    .selectFrom('asset')
+    .$if(needsExifJoin(params), (qb) =>
+      qb.leftJoin('asset_exif', 'asset_exif.assetId', 'asset.id'),
+    ) as unknown as SelectQueryBuilder<
+    DB,
+    'asset' | 'asset_exif',
+    Record<string, never>
+  >
+
+  const filtered = base
+    .selectAll('asset')
+    .$if(distanceExpr !== undefined, (qb) =>
+      qb
+        .innerJoin('smart_search', 'smart_search.assetId', 'asset.id')
+        .select((distanceExpr as RawBuilder<number>).as('distance')),
+    )
+    .where((eb) => buildCombined(eb, params.filters))
+    .$if(params.query?.maxDistance !== undefined, (qb) =>
+      // Repeat the distance expression in WHERE instead of referencing the
+      // select alias (which SQL forbids): same index behavior, and it avoids a
+      // CTE that would break the asset.id correlations in EXISTS sub-filters.
+      qb.where(
+        distanceExpr as RawBuilder<number>,
+        '<=',
+        params.query?.maxDistance as number,
+      ),
+    )
+    .$if(params.joins.includes('exif'), (qb) =>
+      // to_json over the left-joined row: a missing exif row yields an
+      // all-null object rather than SQL null.
+      qb.select((eb) => eb.fn.toJson('asset_exif').as('exif')),
+    )
+    .$if(params.joins.includes('person'), (qb) =>
+      qb.select((eb) => peopleJson(eb).as('people')),
+    )
+    .$if(params.joins.includes('stack'), (qb) =>
+      qb.select((eb) => stackJson(eb).as('stack')),
+    )
+    .$if(params.joins.includes('album'), (qb) =>
+      qb.select((eb) => albumsJson(eb).as('albums')),
+    )
+    .$if(params.joins.includes('owner'), (qb) =>
+      qb.select((eb) => ownerJson(eb).as('owner')),
+    )
+
+  const {page, size} = params.pagination
+  // limit(size + 1) is the no-COUNT hasNextPage probe; the extra row is
+  // trimmed in searchAssets.
+  return applySort(filtered, params, distanceExpr)
+    .limit(size + 1)
+    .offset((page - 1) * size)
+}
+
+export type SearchAssetRow = Awaited<
+  ReturnType<ReturnType<typeof buildSearchQuery>['execute']>
+>[number]
+
+export interface SearchResult {
+  items: SearchAssetRow[]
+  hasNextPage: boolean
+}
+
+/**
+ * Cached probe for the vchord extension; its presence selects the
+ * transaction + `set local vchordrq.probes` shape (mirrors assetDistance).
+ * Reset on failure so a transient connection error doesn't poison the cache.
+ */
+let vchordProbe: Promise<boolean> | undefined
+const hasVchord = (): Promise<boolean> => {
+  if (vchordProbe === undefined) {
+    vchordProbe = sql`select 1 from pg_extension where extname = 'vchord'`
+      .execute(db)
+      .then((result) => result.rows.length > 0)
+      .catch((error: unknown) => {
+        vchordProbe = undefined
+        throw error
+      })
+  }
+  return vchordProbe
+}
+
+/**
+ * Runs a custom search: resolves the optional smart-search embedding, builds
+ * the query, and returns one page of enriched assets plus a hasNextPage flag.
+ * When an embedding is present and vchord is installed, the query runs inside a
+ * transaction that sets the probe count (the vector index only serves the
+ * ORDER BY … LIMIT).
+ */
+export async function searchAssets(
+  params: SearchParams,
+): Promise<SearchResult> {
+  const embedding = params.query
+    ? await getQueryEmbedding(params.query)
+    : undefined
+
+  const {size} = params.pagination
+  const run = async (executor: Kysely<DB>): Promise<SearchResult> => {
+    const rows = await buildSearchQuery(executor, params, embedding).execute()
+    const hasNextPage = rows.length > size
+    if (hasNextPage) {
+      rows.splice(size)
+    }
+    return {items: rows, hasNextPage}
+  }
+
+  if (embedding !== undefined && (await hasVchord())) {
+    return db.transaction().execute(async (trx) => {
+      await sql`set local vchordrq.probes = ${sql.lit(1)}`.execute(trx)
+      return run(trx)
+    })
+  }
+  return run(db)
 }

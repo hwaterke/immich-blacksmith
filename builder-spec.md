@@ -299,6 +299,35 @@ types from searchTypes.ts.
     `buildSearchQuery` + `searchAssets` (vchord transaction, sort,
     pagination, enrichment). Then tests (Verification 2), live smoke (3).
 
+- **2026-06-14 — search.ts slice 2: query assembly (§1, §7, §8, §9) + unit
+  tests (Verification 2) done.** Implementation complete.
+  - Added `needsExifJoin`, enrichment JSON builders (`peopleJson`/`stackJson`/
+    `albumsJson`/`ownerJson`), `applySort`, the exported `buildSearchQuery`
+    (executor-bound so it can run inside the vchord transaction), `SearchResult`/
+    `SearchAssetRow`, the cached `hasVchord` probe, and the executing
+    `searchAssets`. One `as unknown as SelectQueryBuilder<…,'asset'|'asset_exif',…>`
+    cast widens scope for the lazy exif join (gated by `needsExifJoin`); the
+    optional distance/maxDistance/enrichment all use `.$if`, which renders
+    added selects as `?`-optional columns (matches §9).
+  - `buildSearchQuery(executor, params, embedding?)` — the spec wrote
+    `(params, embedding?)`, but the executor param is required so the query
+    binds to the transaction (the `set local vchordrq.probes` only affects its
+    own txn). Tests pass `db`.
+  - `searchAssets` skips the transaction entirely unless `embedding && hasVchord()`;
+    `hasVchord` caches the probe and resets on failure.
+  - `src/lib/server/search.test.ts` (new, 16 tests) asserts compiled SQL via
+    `.compile()` (no DB): status injection + `1 = 1`, or/not parens, EXISTS
+    shapes (any/all grouped-distinct/none + closure ancestor for tags), ownerIds
+    constant true/false, `f_unaccent … ilike`, `%>>`, checksum Buffer param,
+    `<=>` select/WHERE/ORDER, exif `to_json`/people `distinct on`/owner
+    explicit columns (no password/pinCode), takenAt/fileSize `nulls last`,
+    random without secondary key, limit=size+1/offset.
+  - Verified: `pnpm test` 100 passed (5 files), `pnpm typecheck` clean except
+    the two known pre-existing files (`data/query-to-delete.ts`,
+    `routes/sanity-check.tsx`).
+  - Remaining for the whole plan: only Verification 3 (live smoke against the
+    read-only DB) — manual / env-gated.
+
 ## Gotchas
 
 - `asset_file` uniqueness is `(assetId, type, isEdited)` (live-DB index
@@ -314,6 +343,15 @@ types from searchTypes.ts.
   fully typed.
 - zod v4's `z.uuid()` validates version/variant nibbles — test fixtures need
   RFC-shaped UUIDs (e.g. `…-4111-8111-…`), not arbitrary hex.
+- The maxDistance WHERE compiles to `smart_search.embedding <=> $a <= $b`
+  with **no parentheses**, and that is correct: in Postgres a generic operator
+  (`<=>`) binds tighter than the comparison operator `<=`, so it parses as
+  `(embedding <=> $a) <= $b`. Don't "fix" it by adding parens around the
+  distance expression unless you also re-test.
+- `eb.fn.toJson('asset_exif')` over the *left*-joined row yields an all-null
+  JSON object (not SQL `null`) when an asset has no exif row — so the enriched
+  `exif` field is an object of nulls, never null. Acceptable per §8; flagged
+  because callers may expect null.
 
 ## Documented behaviors (comments in code, not new decisions)
 
