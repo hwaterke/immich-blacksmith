@@ -328,6 +328,27 @@ types from searchTypes.ts.
   - Remaining for the whole plan: only Verification 3 (live smoke against the
     read-only DB) — manual / env-gated.
 
+- **2026-06-15 — Verification 3 (live smoke) done. Plan complete.** Ran
+  `searchAssets` end-to-end against the live read-only DB (192.168.1.28, 341k
+  assets) and the Immich ML service (`MACHINE_LEARNING_URL`, reachable) via a
+  throwaway gated test (`search-smoke.test.ts`, deleted after — not committed),
+  run with `node --env-file=.env ./node_modules/vitest/vitest.mjs run
+  --testTimeout=30000 src/lib/server/search-smoke.test.ts` and
+  `SEARCH_LIVE_SMOKE=1`. All four cases green:
+  - **A (filters-only pagination):** `{type: IMAGE, size 3}` → 3 sensible asset
+    rows, `hasNextPage = true`; page-2 ids disjoint from page-1 (stable paging).
+  - **B (text + distance sort):** query `"beach"`, sort distance asc → 5 rows
+    with strictly non-decreasing distances (0.6710 → 0.6746); the
+    vchord-transaction path (`set local vchordrq.probes`) executed since the
+    extension is installed.
+  - **C (maxDistance):** cutoff 0.673 kept exactly the 3 rows ≤ 0.673 and pruned
+    the 0.6746 one — confirms the no-paren `<=> … <=` WHERE precedence is correct
+    (see Gotchas).
+  - **D (enrichment):** `joins: [exif, owner, album, person, stack]` →
+    `exif`/`owner` objects, `albums`/`people` arrays; `owner` carries only
+    id/name/email/avatarColor/profileImagePath — no `password`/`pinCode`.
+  - No code changed. Whole builder-spec is now implemented and verified.
+
 ## Gotchas
 
 - `asset_file` uniqueness is `(assetId, type, isEdited)` (live-DB index
@@ -352,6 +373,11 @@ types from searchTypes.ts.
   JSON object (not SQL `null`) when an asset has no exif row — so the enriched
   `exif` field is an object of nulls, never null. Acceptable per §8; flagged
   because callers may expect null.
+- Cosine `<=>` distances on this dataset run high (~0.67 for the *nearest*
+  matches in the smoke), so a `maxDistance` default must be generous — a 0.3-style
+  cutoff prunes everything. Also: the first text query pays a CLIP cold-start on
+  the ML service (>5 s), so any live test needs a raised timeout; subsequent
+  same-text queries hit `embedding.ts`'s cache and are fast.
 
 ## Documented behaviors (comments in code, not new decisions)
 
