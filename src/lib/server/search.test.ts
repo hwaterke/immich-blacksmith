@@ -37,7 +37,9 @@ describe('buildSearchQuery', () => {
 
     it('adds a stable secondary order on asset.id', () => {
       const {sql} = compile({filters: {}})
-      expect(sql).toContain('order by "asset"."fileCreatedAt" desc, "asset"."id"')
+      expect(sql).toContain(
+        'order by "asset"."fileCreatedAt" desc, "asset"."id"',
+      )
     })
   })
 

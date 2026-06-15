@@ -26,12 +26,14 @@ export const Route = createFileRoute('/api/search')({
 
         // checksum (Buffer) is dropped; thumbhash (Buffer) is base64-encoded so
         // it survives JSON and is usable as a blur placeholder on the client.
-        const cleaned = items.map(({checksum: _checksum, thumbhash, ...rest}) => ({
-          ...rest,
-          thumbhash: thumbhash
-            ? Buffer.from(thumbhash).toString('base64')
-            : null,
-        }))
+        const cleaned = items.map(
+          ({checksum: _checksum, thumbhash, ...rest}) => ({
+            ...rest,
+            thumbhash: thumbhash
+              ? Buffer.from(thumbhash).toString('base64')
+              : null,
+          }),
+        )
 
         return Response.json({items: cleaned, hasNextPage})
       },
