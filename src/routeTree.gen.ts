@@ -15,6 +15,7 @@ import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewNikonLowResRouteImport } from './routes/review.nikon-low-res'
 import { Route as ReviewDuplicatesRouteImport } from './routes/review.duplicates'
+import { Route as ApiSearchRouteImport } from './routes/api.search'
 import { Route as ApiNikonLowResRouteImport } from './routes/api.nikon-low-res'
 import { Route as ApiMarkForDeletionRouteImport } from './routes/api.mark-for-deletion'
 import { Route as ReviewSimilarIndexRouteImport } from './routes/review.similar.index'
@@ -57,6 +58,11 @@ const ReviewNikonLowResRoute = ReviewNikonLowResRouteImport.update({
 const ReviewDuplicatesRoute = ReviewDuplicatesRouteImport.update({
   id: '/review/duplicates',
   path: '/review/duplicates',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiSearchRoute = ApiSearchRouteImport.update({
+  id: '/api/search',
+  path: '/api/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiNikonLowResRoute = ApiNikonLowResRouteImport.update({
@@ -132,6 +138,7 @@ export interface FileRoutesByFullPath {
   '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/api/search': typeof ApiSearchRoute
   '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
@@ -153,6 +160,7 @@ export interface FileRoutesByTo {
   '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/api/search': typeof ApiSearchRoute
   '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
@@ -175,6 +183,7 @@ export interface FileRoutesById {
   '/sanity-check': typeof SanityCheckRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
+  '/api/search': typeof ApiSearchRoute
   '/review/duplicates': typeof ReviewDuplicatesRoute
   '/review/nikon-low-res': typeof ReviewNikonLowResRoute
   '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
@@ -198,6 +207,7 @@ export interface FileRouteTypes {
     | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/api/search'
     | '/review/duplicates'
     | '/review/nikon-low-res'
     | '/api/comfyui/generate'
@@ -219,6 +229,7 @@ export interface FileRouteTypes {
     | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/api/search'
     | '/review/duplicates'
     | '/review/nikon-low-res'
     | '/api/comfyui/generate'
@@ -240,6 +251,7 @@ export interface FileRouteTypes {
     | '/sanity-check'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
+    | '/api/search'
     | '/review/duplicates'
     | '/review/nikon-low-res'
     | '/api/comfyui/generate'
@@ -262,6 +274,7 @@ export interface RootRouteChildren {
   SanityCheckRoute: typeof SanityCheckRoute
   ApiMarkForDeletionRoute: typeof ApiMarkForDeletionRoute
   ApiNikonLowResRoute: typeof ApiNikonLowResRoute
+  ApiSearchRoute: typeof ApiSearchRoute
   ReviewDuplicatesRoute: typeof ReviewDuplicatesRoute
   ReviewNikonLowResRoute: typeof ReviewNikonLowResRoute
   ApiComfyuiGenerateRoute: typeof ApiComfyuiGenerateRoute
@@ -318,6 +331,13 @@ declare module '@tanstack/react-router' {
       path: '/review/duplicates'
       fullPath: '/review/duplicates'
       preLoaderRoute: typeof ReviewDuplicatesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/search': {
+      id: '/api/search'
+      path: '/api/search'
+      fullPath: '/api/search'
+      preLoaderRoute: typeof ApiSearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/nikon-low-res': {
@@ -433,6 +453,7 @@ const rootRouteChildren: RootRouteChildren = {
   SanityCheckRoute: SanityCheckRoute,
   ApiMarkForDeletionRoute: ApiMarkForDeletionRoute,
   ApiNikonLowResRoute: ApiNikonLowResRoute,
+  ApiSearchRoute: ApiSearchRoute,
   ReviewDuplicatesRoute: ReviewDuplicatesRoute,
   ReviewNikonLowResRoute: ReviewNikonLowResRoute,
   ApiComfyuiGenerateRoute: ApiComfyuiGenerateRoute,
