@@ -39,10 +39,17 @@ Immich project.
 
 ## Quick start — Docker Compose
 
-The included `Dockerfile` produces a self-contained image (~150–250 MB) that
-runs on top of `node:24-alpine`.
+A prebuilt image is published to the GitHub Container Registry for `linux/amd64`
+on every push, so the easiest path is to pull it. The image is self-contained
+(~150–250 MB) and runs on top of `node:24-alpine`.
 
-### 1. Build the image
+### 1. Pull the image
+
+```bash
+docker pull ghcr.io/hwaterke/immich-blacksmith:latest
+```
+
+Or build it yourself from a local checkout:
 
 ```bash
 docker build -t immich-blacksmith:latest .
@@ -58,7 +65,7 @@ Drop this next to the existing `immich-server`, `database`, `redis`… services:
 ```yaml
 immich-blacksmith:
   container_name: immich_blacksmith
-  image: immich-blacksmith:latest
+  image: ghcr.io/hwaterke/immich-blacksmith:latest
   # Or build from a local checkout instead of pulling the image:
   # build: ./immich-blacksmith
   environment:
