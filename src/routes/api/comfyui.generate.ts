@@ -1,12 +1,12 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {z} from 'zod'
-import {getComfyUIConfig} from '../lib/comfyui/config'
-import {startJob} from '../lib/comfyui/jobs'
+import {getComfyUIConfig} from '../../lib/comfyui/config'
+import {startJob} from '../../lib/comfyui/jobs'
 import {
   loadWorkflowTemplate,
   templateRequiresImage,
   WorkflowError,
-} from '../lib/comfyui/workflow'
+} from '../../lib/comfyui/workflow'
 
 const BodySchema = z.object({
   prompt: z.string().min(1),

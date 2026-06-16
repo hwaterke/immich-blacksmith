@@ -1,7 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {Buffer} from 'node:buffer'
-import {searchSchema} from '../lib/shared/searchTypes'
-import {searchAssets} from '../lib/server/search'
+import {searchSchema} from '../../lib/shared/searchTypes'
+import {searchAssets} from '../../lib/server/search'
 
 export const Route = createFileRoute('/api/search')({
   server: {

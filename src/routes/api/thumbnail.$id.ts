@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {AssetMediaSize, viewAsset} from '@immich/sdk'
-import {ensureImmichInit} from '../lib/immich'
+import {ensureImmichInit} from '../../lib/immich'
 
 export const Route = createFileRoute('/api/thumbnail/$id')({
   server: {

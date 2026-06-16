@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {getComfyUIConfig} from '../lib/comfyui/config'
-import {listWorkflows} from '../lib/comfyui/workflow'
+import {getComfyUIConfig} from '../../lib/comfyui/config'
+import {listWorkflows} from '../../lib/comfyui/workflow'
 
 export const Route = createFileRoute('/api/comfyui/workflows')({
   server: {

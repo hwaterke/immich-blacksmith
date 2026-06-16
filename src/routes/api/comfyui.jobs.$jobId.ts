@@ -1,5 +1,5 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {getJob} from '../lib/comfyui/jobs'
+import {getJob} from '../../lib/comfyui/jobs'
 
 export const Route = createFileRoute('/api/comfyui/jobs/$jobId')({
   server: {

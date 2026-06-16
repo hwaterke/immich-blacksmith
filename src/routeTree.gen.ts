@@ -15,20 +15,21 @@ import { Route as AssetsRouteImport } from './routes/assets'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ReviewNikonLowResRouteImport } from './routes/review.nikon-low-res'
 import { Route as ReviewDuplicatesRouteImport } from './routes/review.duplicates'
-import { Route as ApiSearchRouteImport } from './routes/api.search'
-import { Route as ApiNikonLowResRouteImport } from './routes/api.nikon-low-res'
-import { Route as ApiMarkForDeletionRouteImport } from './routes/api.mark-for-deletion'
+import { Route as ApiSearchRouteImport } from './routes/api/search'
+import { Route as ApiNikonLowResRouteImport } from './routes/api/nikon-low-res'
+import { Route as ApiMarkForDeletionRouteImport } from './routes/api/mark-for-deletion'
 import { Route as ReviewSimilarIndexRouteImport } from './routes/review.similar.index'
 import { Route as ReviewCompareIndexRouteImport } from './routes/review.compare.index'
 import { Route as ReviewSimilarIdRouteImport } from './routes/review.similar.$id'
-import { Route as ApiThumbnailIdRouteImport } from './routes/api.thumbnail.$id'
-import { Route as ApiSimilarIdRouteImport } from './routes/api.similar.$id'
-import { Route as ApiComfyuiWorkflowsRouteImport } from './routes/api.comfyui.workflows'
-import { Route as ApiComfyuiJobsRouteImport } from './routes/api.comfyui.jobs'
-import { Route as ApiComfyuiGenerateRouteImport } from './routes/api.comfyui.generate'
+import { Route as ApiThumbnailIdRouteImport } from './routes/api/thumbnail.$id'
+import { Route as ApiSimilarIdRouteImport } from './routes/api/similar.$id'
+import { Route as ApiExifIdRouteImport } from './routes/api/exif.$id'
+import { Route as ApiComfyuiWorkflowsRouteImport } from './routes/api/comfyui.workflows'
+import { Route as ApiComfyuiJobsRouteImport } from './routes/api/comfyui.jobs'
+import { Route as ApiComfyuiGenerateRouteImport } from './routes/api/comfyui.generate'
 import { Route as ReviewCompareId1Id2RouteImport } from './routes/review.compare.$id1.$id2'
-import { Route as ApiTryIdId2RouteImport } from './routes/api.try.$id.$id2'
-import { Route as ApiComfyuiJobsJobIdRouteImport } from './routes/api.comfyui.jobs.$jobId'
+import { Route as ApiTryIdId2RouteImport } from './routes/api/try.$id.$id2'
+import { Route as ApiComfyuiJobsJobIdRouteImport } from './routes/api/comfyui.jobs.$jobId'
 
 const SanityCheckRoute = SanityCheckRouteImport.update({
   id: '/sanity-check',
@@ -100,6 +101,11 @@ const ApiSimilarIdRoute = ApiSimilarIdRouteImport.update({
   path: '/api/similar/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiExifIdRoute = ApiExifIdRouteImport.update({
+  id: '/api/exif/$id',
+  path: '/api/exif/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiComfyuiWorkflowsRoute = ApiComfyuiWorkflowsRouteImport.update({
   id: '/api/comfyui/workflows',
   path: '/api/comfyui/workflows',
@@ -144,6 +150,7 @@ export interface FileRoutesByFullPath {
   '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
   '/api/comfyui/jobs': typeof ApiComfyuiJobsRouteWithChildren
   '/api/comfyui/workflows': typeof ApiComfyuiWorkflowsRoute
+  '/api/exif/$id': typeof ApiExifIdRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
@@ -166,6 +173,7 @@ export interface FileRoutesByTo {
   '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
   '/api/comfyui/jobs': typeof ApiComfyuiJobsRouteWithChildren
   '/api/comfyui/workflows': typeof ApiComfyuiWorkflowsRoute
+  '/api/exif/$id': typeof ApiExifIdRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
@@ -189,6 +197,7 @@ export interface FileRoutesById {
   '/api/comfyui/generate': typeof ApiComfyuiGenerateRoute
   '/api/comfyui/jobs': typeof ApiComfyuiJobsRouteWithChildren
   '/api/comfyui/workflows': typeof ApiComfyuiWorkflowsRoute
+  '/api/exif/$id': typeof ApiExifIdRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
@@ -213,6 +222,7 @@ export interface FileRouteTypes {
     | '/api/comfyui/generate'
     | '/api/comfyui/jobs'
     | '/api/comfyui/workflows'
+    | '/api/exif/$id'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
     | '/review/similar/$id'
@@ -235,6 +245,7 @@ export interface FileRouteTypes {
     | '/api/comfyui/generate'
     | '/api/comfyui/jobs'
     | '/api/comfyui/workflows'
+    | '/api/exif/$id'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
     | '/review/similar/$id'
@@ -257,6 +268,7 @@ export interface FileRouteTypes {
     | '/api/comfyui/generate'
     | '/api/comfyui/jobs'
     | '/api/comfyui/workflows'
+    | '/api/exif/$id'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
     | '/review/similar/$id'
@@ -280,6 +292,7 @@ export interface RootRouteChildren {
   ApiComfyuiGenerateRoute: typeof ApiComfyuiGenerateRoute
   ApiComfyuiJobsRoute: typeof ApiComfyuiJobsRouteWithChildren
   ApiComfyuiWorkflowsRoute: typeof ApiComfyuiWorkflowsRoute
+  ApiExifIdRoute: typeof ApiExifIdRoute
   ApiSimilarIdRoute: typeof ApiSimilarIdRoute
   ApiThumbnailIdRoute: typeof ApiThumbnailIdRoute
   ReviewSimilarIdRoute: typeof ReviewSimilarIdRoute
@@ -389,6 +402,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiSimilarIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/exif/$id': {
+      id: '/api/exif/$id'
+      path: '/api/exif/$id'
+      fullPath: '/api/exif/$id'
+      preLoaderRoute: typeof ApiExifIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/comfyui/workflows': {
       id: '/api/comfyui/workflows'
       path: '/api/comfyui/workflows'
@@ -459,6 +479,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiComfyuiGenerateRoute: ApiComfyuiGenerateRoute,
   ApiComfyuiJobsRoute: ApiComfyuiJobsRouteWithChildren,
   ApiComfyuiWorkflowsRoute: ApiComfyuiWorkflowsRoute,
+  ApiExifIdRoute: ApiExifIdRoute,
   ApiSimilarIdRoute: ApiSimilarIdRoute,
   ApiThumbnailIdRoute: ApiThumbnailIdRoute,
   ReviewSimilarIdRoute: ReviewSimilarIdRoute,
