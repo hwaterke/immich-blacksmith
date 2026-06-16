@@ -1,7 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {z} from 'zod'
-import {listJobs} from '../../lib/comfyui/jobs'
-import type {JobStatus} from '../../lib/comfyui/jobs'
+import {listJobs} from '../../lib/server/comfyui/jobs'
+import type {JobStatus} from '../../lib/server/comfyui/jobs'
 
 const STATUSES = [
   'pending',

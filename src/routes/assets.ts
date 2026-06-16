@@ -1,5 +1,5 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {db} from '../db'
+import {db} from '../lib/server/db'
 
 export const Route = createFileRoute('/assets')({
   server: {

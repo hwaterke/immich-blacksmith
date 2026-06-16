@@ -1,30 +1,10 @@
 import {createServerFn} from '@tanstack/react-start'
-import {resolve} from 'node:path'
-import type {ExifTags} from './exif'
+import {readExifForAsset, type ExifResult} from './server/exifReader'
 
-export type ExifResult = {tags: ExifTags} | {error: string}
+export type {ExifResult}
 
-export async function readExifForAsset(assetId: string): Promise<ExifResult> {
-  const {findOriginalPathByAssetId} = await import('./assetQueries')
-  const {toContainerPath, isUnderMediaRoot} = await import('./mediaPath')
-  const {readExif} = await import('./exif')
-
-  const originalPath = await findOriginalPathByAssetId(assetId)
-  if (!originalPath) return {error: 'Asset not found'}
-
-  const containerPath = resolve(toContainerPath(originalPath))
-  if (!isUnderMediaRoot(containerPath)) {
-    return {error: 'Resolved path is outside the configured media root'}
-  }
-
-  try {
-    const tags = await readExif(containerPath)
-    return {tags}
-  } catch (err) {
-    return {error: err instanceof Error ? err.message : 'Failed to read EXIF'}
-  }
-}
-
+// `readExifForAsset` is only referenced inside the handler, so the compiler
+// strips the server-only import from the client bundle (replaced by an RPC stub).
 export const loadExif = createServerFn({method: 'GET'})
   .inputValidator((data: {assetId: string}) => data)
-  .handler(async ({data}): Promise<ExifResult> => readExifForAsset(data.assetId))
+  .handler(({data}): Promise<ExifResult> => readExifForAsset(data.assetId))

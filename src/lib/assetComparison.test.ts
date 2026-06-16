@@ -6,7 +6,7 @@ import {
   exifTones,
   isFilesystemTag,
 } from './assetComparison'
-import type {ExifTags} from './exif'
+import type {ExifTags} from './server/exif'
 
 /* ── helpers ── */
 

@@ -28,7 +28,7 @@
     "format": "prettier --write .",
     "check": "prettier --check .",
     "typecheck": "tsc --noEmit",
-    "db:introspect": "kysely-codegen --out-file=src/db.d.ts --dialect=postgres --type-only-imports"
+    "db:introspect": "kysely-codegen --out-file=src/lib/server/db.d.ts --dialect=postgres --type-only-imports"
   },
   "dependencies": {
     "@immich/sdk": "^2.7.5",

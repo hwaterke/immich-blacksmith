@@ -1,5 +1,5 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {assetDistance} from '../../lib/assetQueries'
+import {assetDistance} from '../../lib/server/assetQueries'
 
 export const Route = createFileRoute('/api/try/$id/$id2')({
   server: {

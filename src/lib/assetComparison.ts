@@ -1,5 +1,5 @@
 import type {AssetResponseDto, ExifResponseDto} from '@immich/sdk'
-import type {ExifTags, JsonValue} from './exif'
+import type {ExifTags, JsonValue} from './server/exif'
 
 /* ──────────────────────────────────────────────────────────────────────────
    Pure comparison logic + view-model builder for the asset comparison table.

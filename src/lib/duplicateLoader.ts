@@ -1,6 +1,18 @@
 import {createServerFn} from '@tanstack/react-start'
-import type {AssetResponseDto} from '@immich/sdk'
+import {
+  getAssetDuplicates,
+  getAssetInfo,
+  type AssetResponseDto,
+} from '@immich/sdk'
 import {looksLikeAssetId} from './utils'
+import {
+  assetDistance,
+  distancesFromReference,
+  findAssetIdByOriginalPath,
+  findSimilarAssetIds,
+  getNikonLowResAssets,
+} from './server/assetQueries'
+import {ensureImmichInit, getImmichWebUrl} from './server/immich'
 
 export interface AssetResult {
   id: string
@@ -45,19 +57,13 @@ export type DuplicateGroupResult =
       immichWebUrl: string
     }
 
-export const getNikonLowResList = createServerFn({method: 'GET'}).handler(
-  async () => {
-    const {getNikonLowResAssets} = await import('./assetQueries')
-    return getNikonLowResAssets()
-  },
+export const getNikonLowResList = createServerFn({method: 'GET'}).handler(() =>
+  getNikonLowResAssets(),
 )
 
 export const resolveOriginalPath = createServerFn({method: 'GET'})
   .inputValidator((data: {originalPath: string}) => data)
-  .handler(async ({data}) => {
-    const {findAssetIdByOriginalPath} = await import('./assetQueries')
-    return findAssetIdByOriginalPath(data.originalPath)
-  })
+  .handler(({data}) => findAssetIdByOriginalPath(data.originalPath))
 
 export async function resolveInputToAssetId(
   raw: string,
@@ -76,10 +82,6 @@ export async function resolveInputToAssetId(
 export const loadDuplicatesFor = createServerFn({method: 'GET'})
   .inputValidator((data: {assetId: string; maxDistance: number}) => data)
   .handler(async ({data}): Promise<DuplicatesData> => {
-    const {findSimilarAssetIds} = await import('./assetQueries')
-    const {ensureImmichInit, getImmichWebUrl} = await import('./immich')
-    const {getAssetInfo} = await import('@immich/sdk')
-
     const {sourceHasEmbedding, results: similars} = await findSimilarAssetIds(
       data.assetId,
       data.maxDistance,
@@ -121,10 +123,6 @@ export const loadDuplicatesFor = createServerFn({method: 'GET'})
 export const loadDuplicateGroup = createServerFn({method: 'GET'})
   .inputValidator((data: {index: number}) => data)
   .handler(async ({data}): Promise<DuplicateGroupResult> => {
-    const {ensureImmichInit, getImmichWebUrl} = await import('./immich')
-    const {distancesFromReference} = await import('./assetQueries')
-    const {getAssetDuplicates} = await import('@immich/sdk')
-
     ensureImmichInit()
     const groups = await getAssetDuplicates()
     if (groups.length === 0) {
@@ -160,10 +158,6 @@ export const loadDuplicateGroup = createServerFn({method: 'GET'})
 export const loadComparison = createServerFn({method: 'GET'})
   .inputValidator((data: {id1: string; id2: string}) => data)
   .handler(async ({data}): Promise<ComparisonData> => {
-    const {assetDistance} = await import('./assetQueries')
-    const {ensureImmichInit, getImmichWebUrl} = await import('./immich')
-    const {getAssetInfo} = await import('@immich/sdk')
-
     ensureImmichInit()
     const immichWebUrl = getImmichWebUrl()
     const loadAsset = async (id: string): Promise<AssetResult> => {

@@ -1,5 +1,5 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {readExifForAsset} from '../../lib/exifLoader'
+import {readExifForAsset} from '../../lib/server/exifReader'
 
 export const Route = createFileRoute('/api/exif/$id')({
   server: {

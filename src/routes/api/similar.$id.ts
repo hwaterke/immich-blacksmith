@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {z} from 'zod'
-import {findSimilarAssetIds} from '../../lib/assetQueries'
+import {findSimilarAssetIds} from '../../lib/server/assetQueries'
 
 export const Route = createFileRoute('/api/similar/$id')({
   validateSearch: z.object({

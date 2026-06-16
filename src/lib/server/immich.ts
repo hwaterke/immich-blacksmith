@@ -1,3 +1,4 @@
+import '@tanstack/react-start/server-only'
 import {init} from '@immich/sdk'
 
 let initialized = false

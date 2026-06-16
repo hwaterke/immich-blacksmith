@@ -1,5 +1,5 @@
 import '@tanstack/react-start/server-only'
-import {db} from '../../db'
+import {db} from './db'
 import type {SearchQuery} from '../shared/searchTypes'
 
 // Default CLIP model in Immich (server/src/config.ts).

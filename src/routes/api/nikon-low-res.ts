@@ -1,5 +1,5 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {getNikonLowResAssets} from '../../lib/assetQueries'
+import {getNikonLowResAssets} from '../../lib/server/assetQueries'
 
 export const Route = createFileRoute('/api/nikon-low-res')({
   server: {

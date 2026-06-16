@@ -11,8 +11,8 @@ import type {
   SqlBool,
 } from 'kysely'
 import {jsonArrayFrom, jsonObjectFrom} from 'kysely/helpers/postgres'
-import {db} from '../../db'
-import type {DB} from '../../db.d'
+import {db} from './db'
+import type {DB} from './db.d'
 import type {CombinedFilter, Filter, SearchParams} from '../shared/searchTypes'
 import {getQueryEmbedding} from './embedding'
 
