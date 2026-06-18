@@ -21,6 +21,8 @@ import { Route as ApiMarkForDeletionRouteImport } from './routes/api/mark-for-de
 import { Route as ReviewSimilarIndexRouteImport } from './routes/review.similar.index'
 import { Route as ReviewCompareIndexRouteImport } from './routes/review.compare.index'
 import { Route as ReviewSimilarIdRouteImport } from './routes/review.similar.$id'
+import { Route as ApiTimelineBucketsRouteImport } from './routes/api/timeline.buckets'
+import { Route as ApiTimelineBucketRouteImport } from './routes/api/timeline.bucket'
 import { Route as ApiThumbnailIdRouteImport } from './routes/api/thumbnail.$id'
 import { Route as ApiSimilarIdRouteImport } from './routes/api/similar.$id'
 import { Route as ApiExifIdRouteImport } from './routes/api/exif.$id'
@@ -91,6 +93,16 @@ const ReviewSimilarIdRoute = ReviewSimilarIdRouteImport.update({
   path: '/review/similar/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTimelineBucketsRoute = ApiTimelineBucketsRouteImport.update({
+  id: '/api/timeline/buckets',
+  path: '/api/timeline/buckets',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiTimelineBucketRoute = ApiTimelineBucketRouteImport.update({
+  id: '/api/timeline/bucket',
+  path: '/api/timeline/bucket',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiThumbnailIdRoute = ApiThumbnailIdRouteImport.update({
   id: '/api/thumbnail/$id',
   path: '/api/thumbnail/$id',
@@ -153,6 +165,8 @@ export interface FileRoutesByFullPath {
   '/api/exif/$id': typeof ApiExifIdRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/api/timeline/bucket': typeof ApiTimelineBucketRoute
+  '/api/timeline/buckets': typeof ApiTimelineBucketsRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
   '/review/compare/': typeof ReviewCompareIndexRoute
   '/review/similar/': typeof ReviewSimilarIndexRoute
@@ -176,6 +190,8 @@ export interface FileRoutesByTo {
   '/api/exif/$id': typeof ApiExifIdRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/api/timeline/bucket': typeof ApiTimelineBucketRoute
+  '/api/timeline/buckets': typeof ApiTimelineBucketsRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
   '/review/compare': typeof ReviewCompareIndexRoute
   '/review/similar': typeof ReviewSimilarIndexRoute
@@ -200,6 +216,8 @@ export interface FileRoutesById {
   '/api/exif/$id': typeof ApiExifIdRoute
   '/api/similar/$id': typeof ApiSimilarIdRoute
   '/api/thumbnail/$id': typeof ApiThumbnailIdRoute
+  '/api/timeline/bucket': typeof ApiTimelineBucketRoute
+  '/api/timeline/buckets': typeof ApiTimelineBucketsRoute
   '/review/similar/$id': typeof ReviewSimilarIdRoute
   '/review/compare/': typeof ReviewCompareIndexRoute
   '/review/similar/': typeof ReviewSimilarIndexRoute
@@ -225,6 +243,8 @@ export interface FileRouteTypes {
     | '/api/exif/$id'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/api/timeline/bucket'
+    | '/api/timeline/buckets'
     | '/review/similar/$id'
     | '/review/compare/'
     | '/review/similar/'
@@ -248,6 +268,8 @@ export interface FileRouteTypes {
     | '/api/exif/$id'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/api/timeline/bucket'
+    | '/api/timeline/buckets'
     | '/review/similar/$id'
     | '/review/compare'
     | '/review/similar'
@@ -271,6 +293,8 @@ export interface FileRouteTypes {
     | '/api/exif/$id'
     | '/api/similar/$id'
     | '/api/thumbnail/$id'
+    | '/api/timeline/bucket'
+    | '/api/timeline/buckets'
     | '/review/similar/$id'
     | '/review/compare/'
     | '/review/similar/'
@@ -295,6 +319,8 @@ export interface RootRouteChildren {
   ApiExifIdRoute: typeof ApiExifIdRoute
   ApiSimilarIdRoute: typeof ApiSimilarIdRoute
   ApiThumbnailIdRoute: typeof ApiThumbnailIdRoute
+  ApiTimelineBucketRoute: typeof ApiTimelineBucketRoute
+  ApiTimelineBucketsRoute: typeof ApiTimelineBucketsRoute
   ReviewSimilarIdRoute: typeof ReviewSimilarIdRoute
   ReviewCompareIndexRoute: typeof ReviewCompareIndexRoute
   ReviewSimilarIndexRoute: typeof ReviewSimilarIndexRoute
@@ -386,6 +412,20 @@ declare module '@tanstack/react-router' {
       path: '/review/similar/$id'
       fullPath: '/review/similar/$id'
       preLoaderRoute: typeof ReviewSimilarIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/timeline/buckets': {
+      id: '/api/timeline/buckets'
+      path: '/api/timeline/buckets'
+      fullPath: '/api/timeline/buckets'
+      preLoaderRoute: typeof ApiTimelineBucketsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/timeline/bucket': {
+      id: '/api/timeline/bucket'
+      path: '/api/timeline/bucket'
+      fullPath: '/api/timeline/bucket'
+      preLoaderRoute: typeof ApiTimelineBucketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/thumbnail/$id': {
@@ -482,6 +522,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiExifIdRoute: ApiExifIdRoute,
   ApiSimilarIdRoute: ApiSimilarIdRoute,
   ApiThumbnailIdRoute: ApiThumbnailIdRoute,
+  ApiTimelineBucketRoute: ApiTimelineBucketRoute,
+  ApiTimelineBucketsRoute: ApiTimelineBucketsRoute,
   ReviewSimilarIdRoute: ReviewSimilarIdRoute,
   ReviewCompareIndexRoute: ReviewCompareIndexRoute,
   ReviewSimilarIndexRoute: ReviewSimilarIndexRoute,
