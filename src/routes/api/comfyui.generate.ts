@@ -7,6 +7,13 @@ import {
   templateRequiresImage,
   WorkflowError,
 } from '../../lib/server/comfyui/workflow'
+import {
+  createLogger,
+  errorContext,
+  withRequestLogging,
+} from '../../lib/server/logger'
+
+const log = createLogger('api:comfyui:generate')
 
 const BodySchema = z.object({
   prompt: z.string().min(1),
@@ -17,16 +24,18 @@ const BodySchema = z.object({
 export const Route = createFileRoute('/api/comfyui/generate')({
   server: {
     handlers: {
-      POST: async ({request}) => {
+      POST: withRequestLogging('api:comfyui:generate', async ({request}) => {
         let body: unknown
         try {
           body = await request.json()
         } catch {
+          log.warn('Invalid JSON body')
           return Response.json({error: 'Invalid JSON body'}, {status: 400})
         }
 
         const parsed = BodySchema.safeParse(body)
         if (!parsed.success) {
+          log.warn('Invalid body', {issues: parsed.error.issues})
           return Response.json(
             {error: 'Invalid body', issues: parsed.error.issues},
             {status: 400},
@@ -37,6 +46,7 @@ export const Route = createFileRoute('/api/comfyui/generate')({
         try {
           getComfyUIConfig()
         } catch (error) {
+          log.error('ComfyUI not configured', {...errorContext(error)})
           return Response.json(
             {error: error instanceof Error ? error.message : String(error)},
             {status: 500},
@@ -48,12 +58,19 @@ export const Route = createFileRoute('/api/comfyui/generate')({
           template = await loadWorkflowTemplate(workflowName)
         } catch (error) {
           if (error instanceof WorkflowError) {
+            log.warn('Workflow load failed', {
+              workflow: workflowName,
+              ...errorContext(error),
+            })
             return Response.json({error: error.message}, {status: 400})
           }
           throw error
         }
 
         if (templateRequiresImage(template) && assetId == null) {
+          log.warn('Workflow requires an input image but none provided', {
+            workflow: workflowName,
+          })
           return Response.json(
             {
               error: `Workflow "${workflowName}" requires an input image; provide an assetId`,
@@ -68,12 +85,17 @@ export const Route = createFileRoute('/api/comfyui/generate')({
           prompt,
           assetId,
         })
+        log.info('Started ComfyUI job', {
+          jobId: job.jobId,
+          workflow: workflowName,
+          assetId,
+        })
 
         return Response.json(
           {jobId: job.jobId, status: job.status},
           {status: 202},
         )
-      },
+      }),
     },
   },
 })

@@ -2,6 +2,9 @@ import {createFileRoute} from '@tanstack/react-router'
 import {z} from 'zod'
 import {listJobs} from '../../lib/server/comfyui/jobs'
 import type {JobStatus} from '../../lib/server/comfyui/jobs'
+import {createLogger, withRequestLogging} from '../../lib/server/logger'
+
+const log = createLogger('api:comfyui:jobs')
 
 const STATUSES = [
   'pending',
@@ -22,13 +25,14 @@ const QuerySchema = z.object({
 export const Route = createFileRoute('/api/comfyui/jobs')({
   server: {
     handlers: {
-      GET: async ({request}) => {
+      GET: withRequestLogging('api:comfyui:jobs', async ({request}) => {
         const url = new URL(request.url)
         const parsed = QuerySchema.safeParse({
           status: url.searchParams.get('status') ?? undefined,
           limit: url.searchParams.get('limit') ?? undefined,
         })
         if (!parsed.success) {
+          log.warn('Invalid query', {issues: parsed.error.issues})
           return Response.json(
             {error: 'Invalid query', issues: parsed.error.issues},
             {status: 400},
@@ -46,7 +50,7 @@ export const Route = createFileRoute('/api/comfyui/jobs')({
         if (limit != null) jobs = jobs.slice(0, limit)
 
         return Response.json({jobs})
-      },
+      }),
     },
   },
 })

@@ -2,6 +2,9 @@ import '@tanstack/react-start/server-only'
 import {getComfyUIConfig} from './config'
 import {CLIENT_ID, getHistoryImages} from './client'
 import type {ComfyUIImageRef} from './client'
+import {createLogger, errorContext} from '../logger'
+
+const log = createLogger('comfyui')
 
 /**
  * Shared ComfyUI WebSocket.
@@ -56,7 +59,7 @@ export function ensureConnected(): void {
   try {
     next = new WebSocket(wsUrl())
   } catch (error) {
-    console.error('[comfyui] failed to open ws:', error)
+    log.error('failed to open ws', {...errorContext(error)})
     scheduleReconnect()
     return
   }

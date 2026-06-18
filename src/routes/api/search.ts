@@ -2,20 +2,25 @@ import {createFileRoute} from '@tanstack/react-router'
 import {Buffer} from 'node:buffer'
 import {searchSchema} from '../../lib/shared/searchTypes'
 import {searchAssets} from '../../lib/server/search'
+import {createLogger, withRequestLogging} from '../../lib/server/logger'
+
+const log = createLogger('api:search')
 
 export const Route = createFileRoute('/api/search')({
   server: {
     handlers: {
-      POST: async ({request}) => {
+      POST: withRequestLogging('api:search', async ({request}) => {
         let body: unknown
         try {
           body = await request.json()
         } catch {
+          log.warn('Invalid JSON body')
           return Response.json({error: 'Invalid JSON body'}, {status: 400})
         }
 
         const parsed = searchSchema.safeParse(body)
         if (!parsed.success) {
+          log.warn('Invalid body', {issues: parsed.error.issues})
           return Response.json(
             {error: 'Invalid body', issues: parsed.error.issues},
             {status: 400},
@@ -36,7 +41,7 @@ export const Route = createFileRoute('/api/search')({
         )
 
         return Response.json({items: cleaned, hasNextPage})
-      },
+      }),
     },
   },
 })

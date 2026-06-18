@@ -1,6 +1,7 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {z} from 'zod'
 import {findSimilarAssetIds} from '../../lib/server/assetQueries'
+import {withRequestLogging} from '../../lib/server/logger'
 
 export const Route = createFileRoute('/api/similar/$id')({
   validateSearch: z.object({
@@ -8,7 +9,7 @@ export const Route = createFileRoute('/api/similar/$id')({
   }),
   server: {
     handlers: {
-      GET: async ({params, request}) => {
+      GET: withRequestLogging('api:similar', async ({params, request}) => {
         const url = new URL(request.url)
         const raw = url.searchParams.get('maxDistance')
         const parsed = raw != null ? Number(raw) : NaN
@@ -16,7 +17,7 @@ export const Route = createFileRoute('/api/similar/$id')({
 
         const {results} = await findSimilarAssetIds(params.id, maxDistance)
         return Response.json({results})
-      },
+      }),
     },
   },
 })

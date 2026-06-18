@@ -23,6 +23,9 @@ import {
   uploadGeneratedAsset,
 } from './immich'
 import {prepareWorkflow} from './workflow'
+import {createLogger, errorContext} from '../logger'
+
+const log = createLogger('comfyui')
 
 export type JobStatus =
   | 'pending'
@@ -208,7 +211,10 @@ async function runPipeline(
       try {
         stackId = await stackWithOriginal(input.assetId, newAssetId)
       } catch (error) {
-        console.error(`[comfyui] stacking failed for job ${job.jobId}:`, error)
+        log.error(`stacking failed for job ${job.jobId}`, {
+          jobId: job.jobId,
+          ...errorContext(error),
+        })
       }
     }
 
@@ -217,7 +223,10 @@ async function runPipeline(
       await addToAlbum(config.albumName, newAssetId)
       addedToAlbum = true
     } catch (error) {
-      console.error(`[comfyui] album add failed for job ${job.jobId}:`, error)
+      log.error(`album add failed for job ${job.jobId}`, {
+        jobId: job.jobId,
+        ...errorContext(error),
+      })
     }
 
     update(job, {
@@ -230,7 +239,11 @@ async function runPipeline(
       error: error instanceof Error ? error.message : String(error),
       failedStage: stage,
     })
-    console.error(`[comfyui] job ${job.jobId} failed at ${stage}:`, error)
+    log.error(`job ${job.jobId} failed at ${stage}`, {
+      jobId: job.jobId,
+      stage,
+      ...errorContext(error),
+    })
   }
 }
 
