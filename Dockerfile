@@ -22,7 +22,7 @@ ENV PORT=3000
 # is required at runtime; make is only needed to install and is removed after).
 RUN apk add --no-cache perl make \
   && VERSION="$(wget -qO- https://exiftool.org/ver.txt)" \
-  && wget -qO /tmp/exiftool.tar.gz "https://exiftool.org/Image-ExifTool-${VERSION}.tar.gz" \
+  && wget -qO /tmp/exiftool.tar.gz "https://sourceforge.net/projects/exiftool/files/Image-ExifTool-${VERSION}.tar.gz/download" \
   && mkdir -p /tmp/exiftool \
   && tar xzf /tmp/exiftool.tar.gz -C /tmp/exiftool --strip-components=1 \
   && cd /tmp/exiftool \
