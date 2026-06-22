@@ -79,6 +79,7 @@ export type JobStore = {
   save: (job: JobRecord) => void
   get: (jobId: string) => JobRecord | undefined
   list: () => JobRecord[]
+  clearFinished: () => number
 }
 
 function createInMemoryStore(): JobStore {
@@ -92,6 +93,16 @@ function createInMemoryStore(): JobStore {
     },
     get: (jobId) => jobs.get(jobId),
     list: () => [...jobs.values()],
+    clearFinished() {
+      let removed = 0
+      for (const [jobId, job] of jobs) {
+        if (isFinished(job.status)) {
+          jobs.delete(jobId)
+          removed++
+        }
+      }
+      return removed
+    },
   }
 }
 
@@ -114,6 +125,11 @@ export function getJob(jobId: string): JobRecord | undefined {
 
 export function listJobs(): JobRecord[] {
   return store.list()
+}
+
+/** Removes all finished (completed/failed) jobs; returns how many were removed. */
+export function clearFinishedJobs(): number {
+  return store.clearFinished()
 }
 
 function update(job: JobRecord, changes: Partial<JobRecord>): void {

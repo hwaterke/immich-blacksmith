@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router'
 import {z} from 'zod'
-import {listJobs} from '../../lib/server/comfyui/jobs'
+import {clearFinishedJobs, listJobs} from '../../lib/server/comfyui/jobs'
 import type {JobStatus} from '../../lib/server/comfyui/jobs'
 import {createLogger, withRequestLogging} from '../../lib/server/logger'
 
@@ -50,6 +50,11 @@ export const Route = createFileRoute('/api/comfyui/jobs')({
         if (limit != null) jobs = jobs.slice(0, limit)
 
         return Response.json({jobs})
+      }),
+      DELETE: withRequestLogging('api:comfyui:jobs:clear', async () => {
+        const removed = clearFinishedJobs()
+        log.info('Cleared finished jobs', {removed})
+        return Response.json({removed})
       }),
     },
   },
