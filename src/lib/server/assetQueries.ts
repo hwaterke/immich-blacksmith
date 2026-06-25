@@ -1,6 +1,7 @@
 import '@tanstack/react-start/server-only'
 import {sql} from 'kysely'
 import {db} from './db'
+import type {ComparisonAsset} from '../assetComparison'
 
 export interface SimilarAssetResult {
   assetId: string
@@ -40,6 +41,101 @@ export async function findOriginalPathByAssetId(
     .executeTakeFirst()
 
   return row?.originalPath ?? null
+}
+
+function toIso(value: Date | string | null): string | null {
+  if (value == null) return null
+  return value instanceof Date
+    ? value.toISOString()
+    : new Date(value).toISOString()
+}
+
+/**
+ * Comparison/review metadata read straight from the database, so it works for
+ * assets owned by ANY Immich user — the single API key can only see its own
+ * user's assets. Returns a map keyed by asset id; ids not found (or deleted)
+ * are omitted. Postgres types are normalised to the AssetResponseDto shape the
+ * comparison table expects (timestamps → ISO strings, bigint size → number).
+ */
+export async function getComparisonAssetsByIds(
+  ids: string[],
+): Promise<Map<string, ComparisonAsset>> {
+  if (ids.length === 0) return new Map()
+
+  const rows = await db
+    .selectFrom('asset')
+    .leftJoin('asset_exif', 'asset_exif.assetId', 'asset.id')
+    .select([
+      'asset.id as id',
+      'asset.originalPath as originalPath',
+      'asset.originalFileName as originalFileName',
+      'asset.localDateTime as localDateTime',
+      'asset_exif.exifImageWidth as exifImageWidth',
+      'asset_exif.exifImageHeight as exifImageHeight',
+      'asset_exif.fileSizeInByte as fileSizeInByte',
+      'asset_exif.dateTimeOriginal as dateTimeOriginal',
+      'asset_exif.make as make',
+      'asset_exif.model as model',
+      'asset_exif.lensModel as lensModel',
+      'asset_exif.focalLength as focalLength',
+      'asset_exif.fNumber as fNumber',
+      'asset_exif.city as city',
+      'asset_exif.state as state',
+      'asset_exif.country as country',
+      'asset_exif.latitude as latitude',
+      'asset_exif.longitude as longitude',
+    ])
+    .where('asset.id', 'in', ids)
+    .where('asset.deletedAt', 'is', null)
+    .execute()
+
+  return new Map<string, ComparisonAsset>(
+    rows.map((r): [string, ComparisonAsset] => [
+      r.id,
+      {
+        id: r.id,
+        originalPath: r.originalPath,
+        originalFileName: r.originalFileName,
+        localDateTime: toIso(r.localDateTime) ?? '',
+        exifInfo: {
+          exifImageWidth: r.exifImageWidth,
+          exifImageHeight: r.exifImageHeight,
+          fileSizeInByte:
+            r.fileSizeInByte != null ? Number(r.fileSizeInByte) : null,
+          dateTimeOriginal: toIso(r.dateTimeOriginal),
+          make: r.make,
+          model: r.model,
+          lensModel: r.lensModel,
+          focalLength: r.focalLength,
+          fNumber: r.fNumber,
+          city: r.city,
+          state: r.state,
+          country: r.country,
+          latitude: r.latitude,
+          longitude: r.longitude,
+        },
+      },
+    ]),
+  )
+}
+
+/**
+ * Path to Immich's pre-generated thumbnail file (webp) for an asset, as stored
+ * by Immich in `asset_file`. Used to serve thumbnails from disk when the API
+ * key cannot (assets owned by other users).
+ */
+export async function findThumbnailPathByAssetId(
+  assetId: string,
+): Promise<string | null> {
+  const row = await db
+    .selectFrom('asset_file')
+    .select('path')
+    .where('assetId', '=', assetId)
+    .where('type', '=', 'thumbnail')
+    .where('isEdited', '=', false)
+    .executeTakeFirst()
+
+  return row?.path ?? null
 }
 
 export function getNikonLowResAssets() {

@@ -50,3 +50,33 @@ export function isUnderMediaRoot(resolvedPath: string): boolean {
   const candidate = resolve(resolvedPath)
   return candidate === root || candidate.startsWith(root + '/')
 }
+
+/*
+ * Immich's GENERATED derivatives (thumbnail/preview/encoded-video, in
+ * `asset_file.path`) live under Immich's own upload dir — a different root than
+ * the originals above. Originals may be an external library (e.g. /photos-archive),
+ * while derivatives are always under the upload location (Immich stores them as
+ * /usr/src/app/upload/...). Translate those paths with a dedicated mapping that
+ * mirrors `toContainerPath`/`MEDIA_PATH_*`:
+ *   IMMICH_UPLOAD_PATH_SOURCE — Immich-side prefix to strip (e.g. /usr/src/app/upload).
+ *   IMMICH_UPLOAD_PATH_TARGET — where that dir is mounted in Blacksmith.
+ * Leave both blank when the upload dir is mounted at the identical path.
+ */
+export function toUploadContainerPath(immichPath: string): string {
+  const source = stripTrailingSlash(process.env.IMMICH_UPLOAD_PATH_SOURCE ?? '')
+  const target = stripTrailingSlash(process.env.IMMICH_UPLOAD_PATH_TARGET ?? '')
+
+  if (source && !hasPathPrefix(immichPath, source)) return immichPath
+
+  const remainder = source ? immichPath.slice(source.length) : immichPath
+  return target + remainder
+}
+
+export function isUnderUploadRoot(resolvedPath: string): boolean {
+  const target = stripTrailingSlash(process.env.IMMICH_UPLOAD_PATH_TARGET ?? '')
+  if (!target) return true
+
+  const root = resolve(target)
+  const candidate = resolve(resolvedPath)
+  return candidate === root || candidate.startsWith(root + '/')
+}

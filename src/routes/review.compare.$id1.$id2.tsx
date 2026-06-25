@@ -1,6 +1,6 @@
 import {createFileRoute} from '@tanstack/react-router'
-import type {AssetResponseDto} from '@immich/sdk'
 import {ComparisonReview} from '../components/comparison/ComparisonReview'
+import type {ComparisonAsset} from '../lib/assetComparison'
 import {loadComparison} from '../lib/duplicateLoader'
 import type {AssetResult, ComparisonData} from '../lib/duplicateLoader'
 import type {MissingAsset} from '../lib/similarSet'
@@ -23,7 +23,7 @@ export const Route = createFileRoute('/review/compare/$id1/$id2')({
 function ReviewComparePage() {
   const data = Route.useLoaderData()
 
-  const assets: AssetResponseDto[] = []
+  const assets: ComparisonAsset[] = []
   const missing: MissingAsset[] = []
   const collect = (r: AssetResult) => {
     if (r.asset) assets.push(r.asset)

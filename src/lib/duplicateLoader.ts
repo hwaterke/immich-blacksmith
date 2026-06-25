@@ -10,14 +10,16 @@ import {
   distancesFromReference,
   findAssetIdByOriginalPath,
   findSimilarAssetIds,
+  getComparisonAssetsByIds,
   getNikonLowResAssets,
 } from './server/assetQueries'
 import {ensureImmichInit, getImmichWebUrl} from './server/immich'
+import type {ComparisonAsset} from './assetComparison'
 
 export interface AssetResult {
   id: string
   originalPath?: string
-  asset?: AssetResponseDto
+  asset?: ComparisonAsset
   error?: string
 }
 
@@ -87,28 +89,25 @@ export const loadDuplicatesFor = createServerFn({method: 'GET'})
       data.maxDistance,
     )
 
-    ensureImmichInit()
+    // Metadata comes from the DB (not the Immich API), so the review works for
+    // assets owned by any user — the single API key only sees its own. One
+    // query covers the source plus every match.
+    const metadata = await getComparisonAssetsByIds([
+      data.assetId,
+      ...similars.map((s) => s.assetId),
+    ])
     const immichWebUrl = getImmichWebUrl()
-    const loadAsset = async (id: string): Promise<AssetResult> => {
-      try {
-        const asset = await getAssetInfo({id})
-        return {id, asset}
-      } catch (err) {
-        return {
-          id,
-          error: err instanceof Error ? err.message : 'Failed to load asset',
-        }
-      }
+
+    const toResult = (id: string, originalPath?: string): AssetResult => {
+      const asset = metadata.get(id)
+      return asset
+        ? {id, originalPath: asset.originalPath, asset}
+        : {id, originalPath, error: 'Asset not found in database'}
     }
 
-    const [source, ...similarAssets] = await Promise.all([
-      loadAsset(data.assetId),
-      ...similars.map((s) => loadAsset(s.assetId)),
-    ])
-
-    const similarResults: SimilarResult[] = similars.map((s, i) => ({
-      originalPath: s.originalPath,
-      ...similarAssets[i],
+    const source = toResult(data.assetId)
+    const similarResults: SimilarResult[] = similars.map((s) => ({
+      ...toResult(s.assetId, s.originalPath),
       distance: s.distance,
     }))
 

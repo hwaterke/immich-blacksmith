@@ -104,6 +104,12 @@ Notes:
   and prepends `MEDIA_PATH_TARGET`: leave `MEDIA_PATH_SOURCE` blank and set
   `MEDIA_PATH_TARGET` to prepend a mount base (e.g. `/Volumes`), or set both to
   swap one prefix for another. A read-only (`:ro`) mount is sufficient.
+- Reviewing similar assets across **all** users works because metadata is read
+  from the database, and thumbnails the single API key can't fetch (other users'
+  assets) are served from Immich's pre-generated thumbnail files on disk. With
+  the `${UPLOAD_LOCATION}:/usr/src/app/upload:ro` mount above this works out of
+  the box. If you mount the upload dir elsewhere, set `IMMICH_UPLOAD_PATH_SOURCE`
+  / `IMMICH_UPLOAD_PATH_TARGET` the same way as `MEDIA_PATH_*`.
 - The service joins Immich's default network, so it reaches `database` and
   `immich-server` by service name — no extra `networks:` entry needed.
 - Host port `3001` avoids clashing with Immich's web UI on `2283`. Change it
@@ -121,17 +127,19 @@ Then browse `http://<host>:3001`.
 
 All configuration is via environment variables.
 
-| Variable         | Description                                                                 |
-| ---------------- | --------------------------------------------------------------------------- |
-| `IMMICH_URL`     | Base URL of Immich's REST API, e.g. `http://immich-server:2283/api`.        |
-| `IMMICH_API_KEY` | API key generated in Immich (Account Settings → API Keys).                  |
-| `DB_HOST`        | Hostname of Immich's PostgreSQL server.                                     |
-| `DB_PORT`        | PostgreSQL port (default `5432`).                                           |
-| `DB_NAME`        | Immich database name.                                                       |
-| `DB_USER`        | PostgreSQL user. A read-only role is supported and recommended (see below). |
-| `DB_PASSWORD`    | PostgreSQL password for the user above.                                     |
-| `MEDIA_PATH_SOURCE` | Optional. Path prefix stored by Immich (`asset.originalPath`) to strip before exiftool runs. Leave blank to keep the whole path. |
-| `MEDIA_PATH_TARGET` | Optional. Path prefix prepended after stripping `MEDIA_PATH_SOURCE` (e.g. `/Volumes`). Leave both blank if media is mounted at the identical path. |
+| Variable                    | Description                                                                                                                                                                      |
+| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IMMICH_URL`                | Base URL of Immich's REST API, e.g. `http://immich-server:2283/api`.                                                                                                             |
+| `IMMICH_API_KEY`            | API key generated in Immich (Account Settings → API Keys).                                                                                                                       |
+| `DB_HOST`                   | Hostname of Immich's PostgreSQL server.                                                                                                                                          |
+| `DB_PORT`                   | PostgreSQL port (default `5432`).                                                                                                                                                |
+| `DB_NAME`                   | Immich database name.                                                                                                                                                            |
+| `DB_USER`                   | PostgreSQL user. A read-only role is supported and recommended (see below).                                                                                                      |
+| `DB_PASSWORD`               | PostgreSQL password for the user above.                                                                                                                                          |
+| `MEDIA_PATH_SOURCE`         | Optional. Path prefix stored by Immich (`asset.originalPath`) to strip before exiftool runs. Leave blank to keep the whole path.                                                 |
+| `MEDIA_PATH_TARGET`         | Optional. Path prefix prepended after stripping `MEDIA_PATH_SOURCE` (e.g. `/Volumes`). Leave both blank if media is mounted at the identical path.                               |
+| `IMMICH_UPLOAD_PATH_SOURCE` | Optional. Immich-side prefix of the upload dir (where generated thumbnails live, e.g. `/usr/src/app/upload`) to strip when serving thumbnails for other users' assets from disk. |
+| `IMMICH_UPLOAD_PATH_TARGET` | Optional. Where Immich's upload dir is mounted in Blacksmith. Leave both blank when mounted at the identical path.                                                               |
 
 See [`.env.example`](.env.example) for a template.
 

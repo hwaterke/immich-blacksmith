@@ -1,12 +1,9 @@
 import {createFileRoute} from '@tanstack/react-router'
-import {appendFile, mkdir} from 'node:fs/promises'
-import {dirname} from 'node:path'
 import {z} from 'zod'
+import {addToDeletionList} from '../../lib/server/deletionList'
 import {createLogger, withRequestLogging} from '../../lib/server/logger'
 
 const log = createLogger('api:mark-for-deletion')
-
-const DELETION_LOG_PATH = './data/assets-to-delete.txt'
 
 const BodySchema = z.object({
   originalPath: z.string().min(1),
@@ -33,8 +30,7 @@ export const Route = createFileRoute('/api/mark-for-deletion')({
           )
         }
 
-        await mkdir(dirname(DELETION_LOG_PATH), {recursive: true})
-        await appendFile(DELETION_LOG_PATH, parsed.data.originalPath + '\n')
+        await addToDeletionList(parsed.data.originalPath)
         log.info('Marked asset for deletion', {
           originalPath: parsed.data.originalPath,
         })

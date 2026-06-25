@@ -1,6 +1,6 @@
 import type {ReactNode} from 'react'
-import type {AssetResponseDto} from '@immich/sdk'
 import {buildComparisonModel} from '../../lib/assetComparison'
+import type {ComparisonAsset} from '../../lib/assetComparison'
 import type {MissingAsset} from '../../lib/similarSet'
 import {useFlagForDeletion} from '../../lib/useFlagForDeletion'
 import {ComparisonTable} from './ComparisonTable'
@@ -8,7 +8,7 @@ import {ComparisonTable} from './ComparisonTable'
 interface Props {
   header: ReactNode
   /** Column order: index 0 is treated as the reference. */
-  assets: AssetResponseDto[]
+  assets: ComparisonAsset[]
   /** assetId → vector distance to the reference. */
   distances?: Record<string, number | null | undefined>
   suggestedKeepIds?: string[]

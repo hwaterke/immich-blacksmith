@@ -18,6 +18,7 @@ import { Route as ReviewDuplicatesRouteImport } from './routes/review.duplicates
 import { Route as ApiSearchRouteImport } from './routes/api/search'
 import { Route as ApiNikonLowResRouteImport } from './routes/api/nikon-low-res'
 import { Route as ApiMarkForDeletionRouteImport } from './routes/api/mark-for-deletion'
+import { Route as ApiAssetsToDeleteRouteImport } from './routes/api/assets-to-delete'
 import { Route as ReviewSimilarIndexRouteImport } from './routes/review.similar.index'
 import { Route as ReviewCompareIndexRouteImport } from './routes/review.compare.index'
 import { Route as ReviewSimilarIdRouteImport } from './routes/review.similar.$id'
@@ -76,6 +77,11 @@ const ApiNikonLowResRoute = ApiNikonLowResRouteImport.update({
 const ApiMarkForDeletionRoute = ApiMarkForDeletionRouteImport.update({
   id: '/api/mark-for-deletion',
   path: '/api/mark-for-deletion',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAssetsToDeleteRoute = ApiAssetsToDeleteRouteImport.update({
+  id: '/api/assets-to-delete',
+  path: '/api/assets-to-delete',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReviewSimilarIndexRoute = ReviewSimilarIndexRouteImport.update({
@@ -154,6 +160,7 @@ export interface FileRoutesByFullPath {
   '/assets': typeof AssetsRoute
   '/ping': typeof PingRoute
   '/sanity-check': typeof SanityCheckRoute
+  '/api/assets-to-delete': typeof ApiAssetsToDeleteRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/api/search': typeof ApiSearchRoute
@@ -179,6 +186,7 @@ export interface FileRoutesByTo {
   '/assets': typeof AssetsRoute
   '/ping': typeof PingRoute
   '/sanity-check': typeof SanityCheckRoute
+  '/api/assets-to-delete': typeof ApiAssetsToDeleteRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/api/search': typeof ApiSearchRoute
@@ -205,6 +213,7 @@ export interface FileRoutesById {
   '/assets': typeof AssetsRoute
   '/ping': typeof PingRoute
   '/sanity-check': typeof SanityCheckRoute
+  '/api/assets-to-delete': typeof ApiAssetsToDeleteRoute
   '/api/mark-for-deletion': typeof ApiMarkForDeletionRoute
   '/api/nikon-low-res': typeof ApiNikonLowResRoute
   '/api/search': typeof ApiSearchRoute
@@ -232,6 +241,7 @@ export interface FileRouteTypes {
     | '/assets'
     | '/ping'
     | '/sanity-check'
+    | '/api/assets-to-delete'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
     | '/api/search'
@@ -257,6 +267,7 @@ export interface FileRouteTypes {
     | '/assets'
     | '/ping'
     | '/sanity-check'
+    | '/api/assets-to-delete'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
     | '/api/search'
@@ -282,6 +293,7 @@ export interface FileRouteTypes {
     | '/assets'
     | '/ping'
     | '/sanity-check'
+    | '/api/assets-to-delete'
     | '/api/mark-for-deletion'
     | '/api/nikon-low-res'
     | '/api/search'
@@ -308,6 +320,7 @@ export interface RootRouteChildren {
   AssetsRoute: typeof AssetsRoute
   PingRoute: typeof PingRoute
   SanityCheckRoute: typeof SanityCheckRoute
+  ApiAssetsToDeleteRoute: typeof ApiAssetsToDeleteRoute
   ApiMarkForDeletionRoute: typeof ApiMarkForDeletionRoute
   ApiNikonLowResRoute: typeof ApiNikonLowResRoute
   ApiSearchRoute: typeof ApiSearchRoute
@@ -391,6 +404,13 @@ declare module '@tanstack/react-router' {
       path: '/api/mark-for-deletion'
       fullPath: '/api/mark-for-deletion'
       preLoaderRoute: typeof ApiMarkForDeletionRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/assets-to-delete': {
+      id: '/api/assets-to-delete'
+      path: '/api/assets-to-delete'
+      fullPath: '/api/assets-to-delete'
+      preLoaderRoute: typeof ApiAssetsToDeleteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/review/similar/': {
@@ -511,6 +531,7 @@ const rootRouteChildren: RootRouteChildren = {
   AssetsRoute: AssetsRoute,
   PingRoute: PingRoute,
   SanityCheckRoute: SanityCheckRoute,
+  ApiAssetsToDeleteRoute: ApiAssetsToDeleteRoute,
   ApiMarkForDeletionRoute: ApiMarkForDeletionRoute,
   ApiNikonLowResRoute: ApiNikonLowResRoute,
   ApiSearchRoute: ApiSearchRoute,

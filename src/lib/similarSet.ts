@@ -1,4 +1,4 @@
-import type {AssetResponseDto} from '@immich/sdk'
+import type {ComparisonAsset} from './assetComparison'
 import type {AssetResult, SimilarResult} from './duplicateLoader'
 
 export interface MissingAsset {
@@ -9,7 +9,7 @@ export interface MissingAsset {
 
 export interface SimilarSet {
   /** Comparable assets, reference (source) first. Empty when there's nothing to compare. */
-  assets: AssetResponseDto[]
+  assets: ComparisonAsset[]
   /** assetId → distance to the source. */
   distances: Record<string, number>
   /** Assets that could not be loaded. */
@@ -24,7 +24,7 @@ export function buildSimilarSet(
 ): SimilarSet {
   const distances: Record<string, number> = {}
   const missing: MissingAsset[] = []
-  const matched: AssetResponseDto[] = []
+  const matched: ComparisonAsset[] = []
 
   for (const s of similars) {
     if (s.asset) {

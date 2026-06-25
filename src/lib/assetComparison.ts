@@ -8,6 +8,35 @@ import type {ExifTags, JsonValue} from './server/exif'
 
 export type Tone = 'best' | 'worst' | 'neutral'
 
+/* The subset of an asset the comparison table actually reads. A full
+   `AssetResponseDto` (from the Immich API) is structurally assignable to this,
+   and so is a row reconstructed straight from the database — which lets the
+   review work for assets the single API key cannot reach (other users'). */
+export type ComparisonExif = Pick<
+  ExifResponseDto,
+  | 'exifImageWidth'
+  | 'exifImageHeight'
+  | 'fileSizeInByte'
+  | 'dateTimeOriginal'
+  | 'make'
+  | 'model'
+  | 'lensModel'
+  | 'focalLength'
+  | 'fNumber'
+  | 'city'
+  | 'state'
+  | 'country'
+  | 'latitude'
+  | 'longitude'
+>
+
+export type ComparisonAsset = Pick<
+  AssetResponseDto,
+  'id' | 'originalPath' | 'originalFileName' | 'localDateTime'
+> & {
+  exifInfo?: ComparisonExif
+}
+
 export interface ComparisonColumn {
   assetId: string
   originalPath: string
@@ -104,7 +133,7 @@ export function formatCamera(
   return v || '—'
 }
 
-export function formatLens(exif: ExifResponseDto | undefined): string {
+export function formatLens(exif: ComparisonExif | undefined): string {
   if (!exif) return '—'
   const parts: string[] = []
   if (exif.lensModel) parts.push(exif.lensModel)
@@ -118,7 +147,7 @@ export function formatLens(exif: ExifResponseDto | undefined): string {
   return parts.join(' · ') || '—'
 }
 
-export function formatLocation(exif: ExifResponseDto | undefined): string {
+export function formatLocation(exif: ComparisonExif | undefined): string {
   if (!exif) return '—'
   const place = [exif.city, exif.state, exif.country].filter(Boolean).join(', ')
   const coords =
@@ -226,11 +255,11 @@ interface SpecDef {
   label: string
   cmp: Cmp
   /** Numeric sort key for max/min comparisons. */
-  key: (a: AssetResponseDto) => number
+  key: (a: ComparisonAsset) => number
   /** String identity for diff comparisons. */
-  ident?: (a: AssetResponseDto) => string
-  value: (a: AssetResponseDto) => string
-  sub?: (a: AssetResponseDto) => string | undefined
+  ident?: (a: ComparisonAsset) => string
+  value: (a: ComparisonAsset) => string
+  sub?: (a: ComparisonAsset) => string | undefined
 }
 
 const SPECS: SpecDef[] = [
@@ -371,7 +400,7 @@ export function buildExifRows(
 /* ── builder ── */
 
 export function buildComparisonModel(
-  assets: AssetResponseDto[],
+  assets: ComparisonAsset[],
   options: BuildComparisonOptions = {},
 ): ComparisonModel {
   const {distances = {}, suggestedKeepIds = [], immichWebUrl = ''} = options
